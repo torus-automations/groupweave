@@ -6,6 +6,10 @@ GroupWeave is the open-source infrastructure for user-owned AI, designed to enab
 
 Work is being transferred from private repos.
 
+## Developer Contributions
+
+Please fork the repository, then create a branch and make the changes you wish to propose. Finally, make a pull request and submit for review.
+
 ## Roadmap
 
 The following features are currently being developed:
