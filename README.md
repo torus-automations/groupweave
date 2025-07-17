@@ -8,7 +8,7 @@ Work is being transferred from private repos.
 
 ## Developer Contributions
 
-Please fork the repository, then create a branch and make the changes you wish to propose. Finally, make a pull request and submit for review.
+Please fork the repository, then create a branch and make the changes you wish to propose. Finally, make a pull request and submit for review. Code contributors have to be approved by the maintainer(s)—one at this time and two when the project has grown. 
 
 ## Roadmap
 
