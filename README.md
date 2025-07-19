@@ -15,5 +15,5 @@ Please fork the repository, then create a branch and make the changes you wish t
 The following features are currently being developed:
 
 *   Betting as a mechanism for content curation/moderation with reward and punishment
-*   Zero Knowledge Proofs (ZKP)
+*   Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP) 
 *   User-owned AI and personalization
