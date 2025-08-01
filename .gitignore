@@ -66,5 +66,5 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Kiro
-.Kiro
+# Kiro IDE
+/.kiro/
