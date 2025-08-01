@@ -68,3 +68,6 @@ yarn-error.log*
 
 # Kiro IDE
 /.kiro/
+
+# Trae IDE
+/.trae/
