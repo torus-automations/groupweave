@@ -34,7 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="min-h-screen bg-background flex flex-col">
-          <header className="w-full p-4 flex justify-center border-b border-border bg-card" role="banner">
+          <header className="w-full p-4 flex-row justify-center border-b border-border bg-card" role="banner">
             <LimelightNav />
           </header>
           <main className="flex-1 flex flex-col" role="main">

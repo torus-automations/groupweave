@@ -1,4 +1,4 @@
 export * from './button';
 export * from './card';
 export * from './code';
-export * from './limelight-nav';
+export { LimelightNav } from './limelight-nav';
