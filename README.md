@@ -10,7 +10,9 @@ Please fork the repository, then create a branch and make the changes you wish t
 
 ## How to use
 
-Do not deploy any of the apps or smart contracts yet. Please check back late August. 
+Do not deploy any of the apps or smart contracts yet. Please check back later in August. 
+
+This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on AGENTS/CLAUDE.md, conventions, Docker, Turborepo, and Bazel. AI agents should have a high efficacy with this setup. 
 
 ## Roadmap
 
