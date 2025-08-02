@@ -15,8 +15,8 @@
     "dist"
   ],
   "devDependencies": {
-    "@groupweave/eslint-config": "workspace:*",
-    "@groupweave/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "eslint": "^8.57.0",
     "typescript": "^5.1.3"
   },
