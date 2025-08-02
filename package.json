@@ -1,33 +1,20 @@
 {
-    "private": true,
-    "scripts": {
-        "dev": "next dev",
-        "start": "next dev",
-        "phala:test": "phala cvms create --name my-app --compose ./docker-compose.yaml --env-file ./.env.development.local",
-        "docker:test": "sudo docker build -t myapp . && sudo docker run -p 3000:3000 --env-file .env.development.local --rm -e PORT=3000 myapp",
-        "docker:prune": "sudo docker system prune",
-        "docker:image": "sudo docker build --no-cache --platform linux/amd64 -t pivortex/my-app:latest .",
-        "docker:push": "sudo docker push pivortex/my-app"
-    },
-    "dependencies": {
-        "@neardefi/shade-agent-js": "^0.2.1",
-        "assert": "^2.1.0",
-        "chainsig.js": "1.1.6",
-        "dotenv": "^16.5.0",
-        "ethers": "^6.11.1",
-        "https-browserify": "^1.0.0",
-        "next": "latest",
-        "os-browserify": "^0.3.0",
-        "path-browserify": "^1.0.1",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "stream-browserify": "^3.0.0",
-        "stream-http": "^3.2.0",
-        "url": "^0.11.4",
-        "viem": "^2.28.1"
-    },
-    "devDependencies": {
-        "ava": "^6.1.3",
-        "next-transpile-modules": "^10.0.1"
-    }
+  "name": "groupweave-turbo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.5",
+    "typescript": "5.8.3"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  }
 }

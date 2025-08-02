@@ -8,6 +8,10 @@ GroupWeave is the open-source infrastructure for user-owned AI, designed to enab
 
 Please fork the repository, then create a branch and make the changes you wish to propose. Finally, make a pull request and submit for review. Code contributors have to be approved by the maintainer(s)—one at this time and two when the project has grown. 
 
+## How to use
+
+Do not deploy any of the apps or smart contracts yet. Please check back late August. 
+
 ## Roadmap
 
 The following features are currently being developed:
