@@ -8,7 +8,7 @@ const rounds = [
   ['/dress_1.jpeg', '/dress_2.jpeg']
 ];
 
-export default function Home() {
+export default function Home(): JSX.Element {
   // duration of each round in seconds
   const ROUND_DURATION = 10;
 
@@ -74,13 +74,12 @@ export default function Home() {
         {rounds[round]?.map((src, idx) => (
           <div
             key={src}
-            className={`${styles.imageWrapper} ${
-              showResult ? (idx === winner ? styles.winner : styles.loser) : ''
-            }`}
+            className={`${styles.imageWrapper} ${showResult ? (idx === winner ? styles.winner : styles.loser) : ''
+              }`}
           >
             <img src={src} alt={`Option ${idx === 0 ? 'A' : 'B'}`} className={styles.image} />
             <button
-              className={`${styles.btn} ${selected === idx ? styles.selectedBtn : ''}` }
+              className={`${styles.btn} ${selected === idx ? styles.selectedBtn : ''}`}
               onClick={() => handleSelect(idx)}
               disabled={selected !== null || showResult}
             >
