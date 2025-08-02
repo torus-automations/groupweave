@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+## Dependencies
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,48 +10,48 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+---
 
-# next.js
+## Build Outputs & Caches
+/build
+dist
 /.next/
 /out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# contract
-contract/target
-
-# Logs
-logs
-*.log
-
-# Caches
+.turbo
 .eslintcache
 .parcel-cache
 
-# IDEs
+---
+
+## Local Environment
+.env
+.env*.local
+*.pem
+
+---
+
+## Logs & Debug
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+---
+
+## Testing
+/coverage
+
+---
+
+## Typescript
+*.tsbuildinfo
+next-env.d.ts
+
+---
+
+## IDEs & Editors
 .idea
 .vscode/*
 !.vscode/settings.json
@@ -59,15 +59,13 @@ logs
 !.vscode/launch.json
 !.vscode/extensions.json
 *.sublime-workspace
-
-# misc
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Kiro IDE
 /.kiro/
-
-# Trae IDE
 /.trae/
+/.claude/
+
+---
+
+## Misc
+.DS_Store
+.vercel
+contract/target
