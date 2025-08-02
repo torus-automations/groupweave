@@ -5,7 +5,14 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "jsx": "preserve",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "strict": false
   },
   "include": [
     "**/*.ts",

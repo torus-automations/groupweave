@@ -8,7 +8,7 @@ const rounds = [
   ['/dress_1.jpeg', '/dress_2.jpeg']
 ];
 
-export default function Home(): JSX.Element {
+export default function Home() {
   // duration of each round in seconds
   const ROUND_DURATION = 10;
 

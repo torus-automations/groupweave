@@ -15,21 +15,29 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "GroupWeave Co-Creation",
   description: "Interactive group decision making game",
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>): JSX.Element {
+}>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="min-h-screen bg-background">
-          <header className="w-full p-4 flex justify-center">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="min-h-screen bg-background flex flex-col">
+          <header className="w-full p-4 flex justify-center border-b border-border bg-card" role="banner">
             <LimelightNav />
           </header>
-          <main className="flex-1">
+          <main className="flex-1 flex flex-col" role="main">
             {children}
           </main>
         </div>
