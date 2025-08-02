@@ -1,5 +1,5 @@
 {
-  "name": "temp-turbo",
+  "name": "groupweave-turbo",
   "private": true,
   "scripts": {
     "build": "turbo run build",
