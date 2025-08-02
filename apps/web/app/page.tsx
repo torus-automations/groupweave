@@ -1,102 +1,111 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+'use client';
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+import { useState, useEffect } from 'react';
+import styles from '../styles/Game.module.css';
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+const rounds = [
+  ['/cactus_1.jpeg', '/cactus_2.jpeg'],
+  ['/dress_1.jpeg', '/dress_2.jpeg']
+];
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  // duration of each round in seconds
+  const ROUND_DURATION = 10;
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
+  const [round, setRound] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(ROUND_DURATION);
+  const [selected, setSelected] = useState<number | null>(null); // 0 or 1
+  const [choicesCount, setChoicesCount] = useState([0, 0]);
+  const [winner, setWinner] = useState<number | null>(null); // 0 or 1
+  const [showResult, setShowResult] = useState(false);
+  const CRITERIA = 'NOT AI generated';
+
+  // countdown / end-of-round logic
+  useEffect(() => {
+    if (showResult) return; // stop when we are showing results
+
+    if (timeLeft === 0) {
+      // decide winner based on selections so far (placeholder for backend aggregation)
+      const winIdx = (choicesCount[0] ?? 0) >= (choicesCount[1] ?? 0) ? 0 : 1;
+      setWinner(winIdx);
+      setShowResult(true);
+      return;
+    }
+
+    const id = setInterval(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [timeLeft, showResult, choicesCount]);
+
+  const handleSelect = (idx: number) => {
+    if (selected !== null || showResult) return;
+    setSelected(idx);
+    setChoicesCount((prev) => {
+      const next = [...prev];
+      if (next[idx] !== undefined) {
+        next[idx] += 1;
+      }
+      return next;
+    });
+  };
+
+  const nextRound = () => {
+    setRound((r) => r + 1);
+    setTimeLeft(ROUND_DURATION);
+    setSelected(null);
+    setChoicesCount([0, 0]);
+    setWinner(null);
+    setShowResult(false);
+  };
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.tagline}>GroupWeave&nbsp;Co-Creation</div>
+      <h2 className={styles.subtitle}>
+        Pick the image(s) &nbsp;
+        <span className={styles.criteria}>{CRITERIA}</span>
+      </h2>
+      {/* countdown */}
+      <div className={styles.timer}>{timeLeft}</div>
+
+      {/* image options */}
+      <div className={styles.images}>
+        {rounds[round]?.map((src, idx) => (
+          <div
+            key={src}
+            className={`${styles.imageWrapper} ${
+              showResult ? (idx === winner ? styles.winner : styles.loser) : ''
+            }`}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+            <img src={src} alt={`Option ${idx === 0 ? 'A' : 'B'}`} className={styles.image} />
+            <button
+              className={`${styles.btn} ${selected === idx ? styles.selectedBtn : ''}` }
+              onClick={() => handleSelect(idx)}
+              disabled={selected !== null || showResult}
+            >
+              {`Select ${idx === 0 ? 'A' : 'B'}`}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {showResult && (
+        <div className={styles.result}>
+          {selected === winner ? 'You won!' : 'Better luck next time'} – Majority chose{' '}
+          {winner === 0 ? 'A' : 'B'}
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
-      </footer>
+      )}
+
+      {showResult && round < rounds.length - 1 && (
+        <button className={styles.nextBtn} onClick={nextRound}>
+          Next Round
+        </button>
+      )}
+
+      {showResult && round === rounds.length - 1 && (
+        <div className={styles.result}>Thanks for playing!</div>
+      )}
     </div>
   );
 }
