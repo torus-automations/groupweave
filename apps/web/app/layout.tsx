@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { LimelightNav } from "@repo/ui";
+import { Menubar } from "@repo/ui";
 import "../styles/globals.css";
 
 const geistSans = localFont({
@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="min-h-screen bg-background flex flex-col">
           <header className="w-full p-4 flex-row justify-center border-b border-border bg-card" role="banner">
-            <LimelightNav />
+            <Menubar />
           </header>
           <main className="flex-1 flex flex-col" role="main">
             {children}
