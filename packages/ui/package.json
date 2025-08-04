@@ -4,16 +4,21 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./button": "./dist/button.js",
-    "./card": "./dist/card.js",
-    "./navigation": "./dist/Navigation.js",
-    "./ui/*": "./dist/ui/*.js",
-    "./hooks/*": "./dist/hooks/*.js",
-    "./lib/*": "./dist/lib/*.js"
-  },
-  "scripts": {
-    "lint": "eslint . --max-warnings 0",
+      ".": "./dist/index.js",
+      "./button": "./dist/button.js",
+      "./card": "./dist/card.js",
+      "./navigation": "./dist/Navigation.js",
+      "./ui/*": "./dist/ui/*.js",
+      "./hooks/*": "./dist/hooks/*.js",
+      "./lib/*": "./dist/lib/*.js"
+    },
+    "files": [
+      "dist/**",
+      "eslint.config.mjs"
+    ],
+    "scripts": {
+      "clean": "rm -rf dist",
+    "lint": "pnpm clean && eslint . --max-warnings 0",
     "build": "tsup",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit"

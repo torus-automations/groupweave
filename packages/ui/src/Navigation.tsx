@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -10,7 +11,11 @@ import {
 } from "./ui/dropdown-menu";
 import { Wallet, ChevronDown, Shield, ArrowUpRight } from "lucide-react";
 
-export const Navigation = () => {
+interface NavigationProps {
+  className?: string;
+}
+
+export const Navigation: React.FC<NavigationProps> = ({ className }) => {
   const walletOptions = [
     { 
       name: "NEAR Protocol", 
@@ -63,26 +68,34 @@ export const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 nav-glass border-b border-nav-border/50">
+    <nav 
+      className="fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ease-in-out"
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo/Brand */}
           <div className="flex items-center">
             <div className="flex items-center gap-3">
               {/* Premium Logo */}
-              <div className="relative">
-                <div className="w-10 h-10 logo-gradient rounded-xl shadow-lg flex items-center justify-center">
-                  <div className="w-6 h-6 bg-white rounded-md"></div>
+              <div className="relative group cursor-pointer">
+                <div className="w-10 h-10 rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:rotate-3" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+                  <div className="w-6 h-6 bg-white rounded-md transition-all duration-300 group-hover:bg-opacity-90"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full shadow-md"></div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full shadow-md transition-all duration-300 group-hover:scale-125 group-hover:animate-pulse"></div>
               </div>
               
               {/* Brand Typography */}
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-text-primary tracking-tight leading-none">
+              <div className="flex flex-col group cursor-pointer">
+                <span className="text-xl font-bold text-gray-900 tracking-tight leading-none transition-all duration-300 group-hover:text-blue-600 group-hover:scale-105">
                   Orb
                 </span>
-                <span className="text-xs text-text-tertiary font-mono tracking-wide">
+                <span className="text-xs text-gray-500 font-mono tracking-wide transition-all duration-300 group-hover:text-gray-700 group-hover:tracking-wider">
                   PROTOCOL
                 </span>
               </div>
@@ -95,19 +108,20 @@ export const Navigation = () => {
               <Button 
                 key={item.name}
                 variant="minimal" 
-                className="text-sm font-medium px-4 py-2 h-10"
+                className="text-sm font-medium px-4 py-2 h-10 transition-all duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-md relative overflow-hidden group"
               >
-                {item.name}
+                <span className="relative z-10 transition-colors duration-300">{item.name}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
               </Button>
             ))}
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-4">
             {/* Security Badge */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-surface-secondary rounded-lg">
-              <Shield className="w-4 h-4 text-success" />
-              <span className="text-xs font-medium text-text-secondary">Secured</span>
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-200 bg-green-50 transition-all duration-300 hover:shadow-md hover:scale-105 group cursor-pointer">
+              <Shield className="w-4 h-4 text-green-600 transition-transform duration-300 group-hover:rotate-12" />
+              <span className="text-xs font-medium text-green-700 transition-colors duration-300 group-hover:text-green-800">Secured</span>
             </div>
 
             {/* Wallet Connect Dropdown */}
@@ -115,71 +129,65 @@ export const Navigation = () => {
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="wallet" 
-                  size="lg"
-                  className="flex items-center gap-3 relative overflow-hidden group"
+                  className="relative overflow-hidden group transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 >
-                  {/* Animated background */}
-                  <div className="absolute inset-0 bg-gradient-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  <div className="relative flex items-center gap-3">
-                    <Wallet className="w-5 h-5" />
-                    <span className="font-semibold">Connect Wallet</span>
-                    <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform duration-200" />
+                  <div className="flex items-center gap-2 relative z-10">
+                    <div className="p-1.5 rounded-md bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
+                      <Wallet className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <span className="font-medium text-gray-700 group-hover:text-gray-900 transition-colors duration-300">Connect</span>
+                    <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-all duration-300 group-hover:rotate-180" />
                   </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
                 </Button>
               </DropdownMenuTrigger>
               
               <DropdownMenuContent 
                 align="end" 
-                className="w-80 mt-3 bg-surface-primary/95 backdrop-blur-xl border border-nav-border shadow-2xl rounded-xl p-2"
-                sideOffset={5}
+                className="w-80 p-4 mt-2 border border-gray-200 bg-white rounded-xl shadow-xl"
+                style={{backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255, 255, 255, 0.95)'}}
               >
                 {/* Header */}
-                <div className="px-4 py-3 border-b border-nav-border/50">
-                  <h3 className="font-semibold text-text-primary">Choose Wallet</h3>
-                  <p className="text-sm text-text-tertiary mt-1">Connect your crypto wallet to continue</p>
+                <div className="mb-4 pb-3 border-b border-gray-100">
+                  <h3 className="font-semibold text-gray-900 mb-1">Connect Wallet</h3>
+                  <p className="text-sm text-gray-600">Choose your preferred wallet to get started</p>
                 </div>
-
+                
                 {/* Wallet Options */}
-                <div className="py-2">
+                <div className="space-y-2 mb-4">
                   {walletOptions.map((wallet, index) => (
-                    <DropdownMenuItem
-                      key={wallet.name}
+                    <DropdownMenuItem 
+                      key={index}
+                      className="p-0 focus:bg-transparent"
                       onClick={() => handleWalletConnect(wallet.name)}
-                      className="wallet-item cursor-pointer focus:bg-surface-secondary data-[highlighted]:bg-surface-secondary m-1 rounded-lg group"
                     >
-                      <div className="flex items-center gap-4 w-full">
-                        {/* Wallet Icon */}
-                        <div className={`w-12 h-12 ${wallet.bgColor} rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200`}>
-                          {wallet.icon}
-                        </div>
-                        
-                        {/* Wallet Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-text-primary">{wallet.name}</span>
-                            {wallet.tag && (
-                              <span className="px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded-md">
-                                {wallet.tag}
-                              </span>
-                            )}
+                      <div className="w-full p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all duration-300 cursor-pointer group">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg ${wallet.bgColor || 'bg-gray-100'} flex items-center justify-center text-lg font-bold transition-transform duration-300 group-hover:scale-110`}>
+                            {wallet.icon}
                           </div>
-                          <p className="text-sm text-text-tertiary mt-1">{wallet.description}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-300">{wallet.name}</span>
+                              {wallet.tag && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">{wallet.tag}</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-0.5">{wallet.description}</p>
+                          </div>
+                          <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                         </div>
-                        
-                        {/* Connect Arrow */}
-                        <ArrowUpRight className="w-5 h-5 text-text-quaternary group-hover:text-primary group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-200" />
                       </div>
                     </DropdownMenuItem>
                   ))}
                 </div>
-
-                <DropdownMenuSeparator className="my-2" />
+                
+                <DropdownMenuSeparator className="my-3" />
                 
                 {/* Footer */}
-                <div className="px-4 py-3">
-                  <p className="text-xs text-text-tertiary text-center">
-                    New to crypto? <span className="text-primary font-medium cursor-pointer hover:underline">Learn more</span>
+                <div className="text-center pt-2">
+                  <p className="text-xs text-gray-500">
+                    New to crypto? <span className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium">Learn more</span>
                   </p>
                 </div>
               </DropdownMenuContent>

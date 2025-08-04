@@ -2,6 +2,7 @@
   "name": "@groupweave/common-types",
   "version": "0.1.0",
   "description": "Shared TypeScript types for GroupWeave platform",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,16 +10,18 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts"
+    "lint": "pnpm clean && eslint ."
   },
   "files": [
-    "dist"
+    "dist",
+    "eslint.config.mjs"
   ],
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "eslint": "^8.57.0",
-    "typescript": "^5.1.3"
+    "eslint": "^9.31.0",
+    "typescript": "^5.1.3",
+    "typescript-eslint": "^8.37.0"
   },
   "publishConfig": {
     "access": "restricted"
