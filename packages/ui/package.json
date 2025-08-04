@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./card": "./src/card.tsx",
-    "./toaster": "./src/ui/toaster.tsx",
-    "./use-toast": "./src/hooks/use-toast.ts"
+    ".": "./dist/index.js",
+    "./button": "./dist/button.js",
+    "./card": "./dist/card.js",
+    "./navigation": "./dist/Navigation.js",
+    "./ui/*": "./dist/ui/*.js",
+    "./hooks/*": "./dist/hooks/*.js",
+    "./lib/*": "./dist/lib/*.js"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
@@ -71,6 +74,7 @@
     "recharts": "^3.1.0",
     "tailwind-merge": "^2.5.4",
     "tsup": "^8.5.0",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "@radix-ui/react-context": "^1.1.2"
   }
 }
