@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React from 'react';
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ interface NavigationProps {
   className?: string;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ className }) => {
+export const Navigation = ({ className }: NavigationProps): React.ReactElement => {
   const walletOptions = [
     { 
       name: "NEAR Protocol", 

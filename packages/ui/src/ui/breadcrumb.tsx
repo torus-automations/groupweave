@@ -6,16 +6,16 @@ import { cn } from "../lib/utils.js"
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
-  React.ComponentPropsWithoutRef<"nav"> & {
-    separator?: React.ReactNode
-  }
->(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />)
+  React.ComponentPropsWithoutRef<"nav">
+>(({ ...props }, ref): React.ReactElement => (
+  <nav ref={ref} aria-label="breadcrumb" {...props} />
+))
 Breadcrumb.displayName = "Breadcrumb"
 
 const BreadcrumbList = React.forwardRef<
   HTMLOListElement,
   React.ComponentPropsWithoutRef<"ol">
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): React.ReactElement => (
   <ol
     ref={ref}
     className={cn(
@@ -30,7 +30,7 @@ BreadcrumbList.displayName = "BreadcrumbList"
 const BreadcrumbItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentPropsWithoutRef<"li">
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): React.ReactElement => (
   <li
     ref={ref}
     className={cn("inline-flex items-center gap-1.5", className)}
@@ -44,8 +44,8 @@ const BreadcrumbLink = React.forwardRef<
   React.ComponentPropsWithoutRef<"a"> & {
     asChild?: boolean
   }
->(({ asChild, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : "a"
+>(({ asChild = false, className, ...props }, ref): React.ReactElement => {
+  const Comp = asChild ? Slot : "a" as any
 
   return (
     <Comp
@@ -60,7 +60,7 @@ BreadcrumbLink.displayName = "BreadcrumbLink"
 const BreadcrumbPage = React.forwardRef<
   HTMLSpanElement,
   React.ComponentPropsWithoutRef<"span">
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): React.ReactElement => (
   <span
     ref={ref}
     role="link"
@@ -72,11 +72,7 @@ const BreadcrumbPage = React.forwardRef<
 ))
 BreadcrumbPage.displayName = "BreadcrumbPage"
 
-const BreadcrumbSeparator = ({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<"li">) => (
+const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentProps<"li">): React.ReactElement => (
   <li
     role="presentation"
     aria-hidden="true"
@@ -91,7 +87,7 @@ BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
 const BreadcrumbEllipsis = ({
   className,
   ...props
-}: React.ComponentProps<"span">) => (
+}: React.ComponentProps<"span">): React.ReactElement => (
   <span
     role="presentation"
     aria-hidden="true"
@@ -102,7 +98,7 @@ const BreadcrumbEllipsis = ({
     <span className="sr-only">More</span>
   </span>
 )
-BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"
+BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis"
 
 export {
   Breadcrumb,

@@ -154,48 +154,70 @@
 @layer components {
   /* Glass Morphism Navigation */
   .nav-glass {
-    @apply backdrop-blur-xl bg-nav-backdrop border-nav-border;
+    backdrop-filter: blur(24px);
+    background-color: hsl(var(--nav-backdrop));
+    border-color: hsl(var(--nav-border));
     box-shadow: var(--shadow-lg);
   }
   
   /* Premium Button Variants */
   .btn-primary {
-    @apply bg-gradient-primary text-primary-foreground;
+    background-image: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
     box-shadow: var(--shadow-md);
   }
   
   .btn-accent {
-    @apply bg-gradient-accent text-accent-foreground;
+    background-image: var(--gradient-accent);
+    color: hsl(var(--accent-foreground));
     box-shadow: var(--shadow-md);
   }
   
   /* Wallet Item Styling */
   .wallet-item {
-    @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300;
-    @apply hover:bg-surface-secondary hover:shadow-sm;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 300ms;
+  }
+  
+  .wallet-item:hover {
+    background-color: hsl(var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
   }
   
   /* Premium Typography */
   .heading-1 {
-    @apply text-4xl font-bold tracking-tight text-text-primary;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: hsl(var(--text-primary));
     font-family: var(--font-sans);
   }
   
   .heading-2 {
-    @apply text-2xl font-semibold tracking-tight text-text-primary;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: hsl(var(--text-primary));
   }
   
   .body-large {
-    @apply text-lg text-text-secondary leading-relaxed;
+    font-size: 1.125rem;
+    color: hsl(var(--text-secondary));
+    line-height: 1.625;
   }
   
   .body-small {
-    @apply text-sm text-text-tertiary;
+    font-size: 0.875rem;
+    color: hsl(var(--text-tertiary));
   }
   
   /* Brand Logo */
   .logo-gradient {
-    @apply bg-gradient-primary;
+    background-image: var(--gradient-primary);
     box-shadow: var(--shadow-lg);
   }
 }

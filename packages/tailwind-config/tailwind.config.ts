@@ -142,6 +142,9 @@ const config: Config = {
     }
   },
   plugins: [require("tailwindcss-animate")],
+  corePlugins: {
+    backdropFilter: true,
+  },
 };
 
 export default config;
