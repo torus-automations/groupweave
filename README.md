@@ -18,6 +18,6 @@ This big project is developed as a monorepo with proper tooling, centralized doc
 
 The following features are currently being developed:
 
-*   Betting as a mechanism for content curation/moderation with reward and punishment
-*   Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP) 
-*   User-owned AI and personalization
+*   Betting as a mechanism for content curation/moderation with reward and punishment 
+*   User-owned AI and personalization with confidential AI models and trusted execution environments
+*   To be decided: Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP)
