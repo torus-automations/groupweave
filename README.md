@@ -6,7 +6,7 @@ GroupWeave is the open-source infrastructure for user-owned AI, designed to enab
 
 ## Developer Contributions
 
-Please fork the repository, then create a branch and make the changes you wish to propose. Finally, make a pull request and submit for review. Code contributors have to be approved by the maintainer(s)—one at this time and two when the project has grown. 
+Please fork the repository, then create a branch and make the changes you wish to propose. Once the feature or fix is successfully implemented, resolve any conflicts with main locally. Finally, make a pull request and submit for review. Code contributions have to be approved by the maintainer(s), one at this time, and two when the project has grown. 
 
 ## How to use
 
