@@ -93,10 +93,10 @@ export const Navigation = ({ className }: NavigationProps): React.ReactElement =
               {/* Brand Typography */}
               <div className="flex flex-col group cursor-pointer">
                 <span className="text-xl font-bold text-gray-900 tracking-tight leading-none transition-all duration-300 group-hover:text-blue-600 group-hover:scale-105">
-                  Orb
+                  Torus
                 </span>
                 <span className="text-xs text-gray-500 font-mono tracking-wide transition-all duration-300 group-hover:text-gray-700 group-hover:tracking-wider">
-                  PROTOCOL
+                  GroupWeave
                 </span>
               </div>
             </div>

@@ -119,7 +119,7 @@ export default function Home() {
         </>
       )}
       <p className={styles.tagline}>
-        This is a game of subjective choices. There are no right or wrong answers.
+        Pick the choice that you think satisfies the criteria.
       </p>
     </div>
   );
