@@ -4,107 +4,123 @@ import { useState, useEffect } from 'react';
 import styles from '../styles/Game.module.css';
 
 const rounds = [
-  ['/cactus_1.jpeg', '/cactus_2.jpeg'],
-  ['/dress_1.jpeg', '/dress_2.jpeg']
+  {
+    images: [
+      { id: 1, src: '/cactus_1.jpeg', name: 'Cactus' },
+      { id: 2, src: '/cactus_2.jpeg', name: 'Cactus' },
+    ],
+    criteria: 'Which cactus is more aesthetic?',
+  },
+  {
+    images: [
+      { id: 3, src: '/dress_1.jpeg', name: 'Dress' },
+      { id: 4, src: '/dress_2.jpeg', name: 'Dress' },
+    ],
+    criteria: 'Which dress would you wear?',
+  },
 ];
 
-export default function Home(): JSX.Element {
-  // duration of each round in seconds
-  const ROUND_DURATION = 10;
+export default function Home() {
+  const [currentRound, setCurrentRound] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [winner, setWinner] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(10);
+  const [isClient, setIsClient] = useState(false);
 
-  const [round, setRound] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(ROUND_DURATION);
-  const [selected, setSelected] = useState<number | null>(null); // 0 or 1
-  const [choicesCount, setChoicesCount] = useState([0, 0]);
-  const [winner, setWinner] = useState<number | null>(null); // 0 or 1
-  const [showResult, setShowResult] = useState(false);
-  const CRITERIA = 'NOT AI generated';
-
-  // countdown / end-of-round logic
   useEffect(() => {
-    if (showResult) return; // stop when we are showing results
+    setIsClient(true);
+  }, []);
 
-    if (timeLeft === 0) {
-      // decide winner based on selections so far (placeholder for backend aggregation)
-      const winIdx = (choicesCount[0] ?? 0) >= (choicesCount[1] ?? 0) ? 0 : 1;
-      setWinner(winIdx);
-      setShowResult(true);
-      return;
-    }
+  useEffect(() => {
+    if (winner !== null) return;
 
-    const id = setInterval(() => {
-      setTimeLeft((t) => t - 1);
+    const timer = setInterval(() => {
+      setCountdown((prevCountdown) => {
+        if (prevCountdown === 1) {
+          clearInterval(timer);
+          // Auto-select a winner if none chosen
+          if (selectedImage === null) {
+            const randomWinner =
+              rounds[currentRound].images[
+                Math.floor(Math.random() * rounds[currentRound].images.length)
+              ].id;
+            setWinner(randomWinner);
+          }
+          return 0;
+        }
+        return prevCountdown - 1;
+      });
     }, 1000);
-    return () => clearInterval(id);
-  }, [timeLeft, showResult, choicesCount]);
 
-  const handleSelect = (idx: number) => {
-    if (selected !== null || showResult) return;
-    setSelected(idx);
-    setChoicesCount((prev) => {
-      const next = [...prev];
-      if (next[idx] !== undefined) {
-        next[idx] += 1;
-      }
-      return next;
-    });
+    return () => clearInterval(timer);
+  }, [currentRound, winner, selectedImage]);
+
+  const handleImageSelection = (id: number) => {
+    if (winner === null) {
+      setSelectedImage(id);
+      setWinner(id);
+    }
   };
 
-  const nextRound = () => {
-    setRound((r) => r + 1);
-    setTimeLeft(ROUND_DURATION);
-    setSelected(null);
-    setChoicesCount([0, 0]);
-    setWinner(null);
-    setShowResult(false);
+  const handleNextRound = () => {
+    if (currentRound < rounds.length - 1) {
+      setCurrentRound(currentRound + 1);
+      setSelectedImage(null);
+      setWinner(null);
+      setCountdown(10);
+    } else {
+      // Game over
+      alert('Game over!');
+    }
   };
+
+  if (!isClient) {
+    return null;
+  }
+
+  const { images, criteria } = rounds[currentRound];
 
   return (
     <div className={styles.container}>
-      <div className={styles.tagline}>GroupWeave&nbsp;Co-Creation</div>
-      <h2 className={styles.subtitle}>
-        Pick the image(s) &nbsp;
-        <span className={styles.criteria}>{CRITERIA}</span>
-      </h2>
-      {/* countdown */}
-      <div className={styles.timer}>{timeLeft}</div>
-
-      {/* image options */}
+      <h1 className={styles.title}>Round {currentRound + 1}</h1>
+      <p className={styles.subtitle}>
+        {criteria}
+      </p>
+      {winner === null && <div className={styles.timer}>{countdown}</div>}
       <div className={styles.images}>
-        {rounds[round]?.map((src, idx) => (
+        {images.map((image) => (
           <div
-            key={src}
-            className={`${styles.imageWrapper} ${showResult ? (idx === winner ? styles.winner : styles.loser) : ''
-              }`}
-          >
-            <img src={src} alt={`Option ${idx === 0 ? 'A' : 'B'}`} className={styles.image} />
+            key={image.id}
+            className={`${styles.imageWrapper} ${
+              winner !== null && winner !== image.id ? styles.loser : ''
+            } ${winner !== null && winner === image.id ? styles.winner : ''}`}>
+            <img src={image.src} alt={image.name} className={styles.image} />
             <button
-              className={`${styles.btn} ${selected === idx ? styles.selectedBtn : ''}`}
-              onClick={() => handleSelect(idx)}
-              disabled={selected !== null || showResult}
-            >
-              {`Select ${idx === 0 ? 'A' : 'B'}`}
+              onClick={() => handleImageSelection(image.id)}
+              disabled={winner !== null}
+              className={`${styles.btn} ${
+                selectedImage === image.id ? styles.selectedBtn : ''
+              }`}>
+              Choose
             </button>
           </div>
         ))}
       </div>
-
-      {showResult && (
-        <div className={styles.result}>
-          {selected === winner ? 'You won!' : 'Better luck next time'} – Majority chose{' '}
-          {winner === 0 ? 'A' : 'B'}
-        </div>
+      {winner !== null && (
+        <>
+          <p className={styles.result}>
+            You chose the winner!
+          </p>
+          {currentRound < rounds.length - 1 && (
+            <button onClick={handleNextRound} className={styles.nextBtn}>
+              Next Round
+            </button>
+          )}
+        </>
       )}
-
-      {showResult && round < rounds.length - 1 && (
-        <button className={styles.nextBtn} onClick={nextRound}>
-          Next Round
-        </button>
-      )}
-
-      {showResult && round === rounds.length - 1 && (
-        <div className={styles.result}>Thanks for playing!</div>
-      )}
+      <p className={styles.tagline}>
+        Pick the choice that you think satisfies the criteria.
+      </p>
     </div>
   );
 }

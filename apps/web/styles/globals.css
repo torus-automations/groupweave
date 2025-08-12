@@ -1,26 +1,223 @@
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    Fira Sans,
-    Droid Sans,
-    Helvetica Neue,
-    sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Orb Design System - Premium Financial Interface Design */
+
+@layer base {
+  :root {
+    /* Core Neutral Palette - Sophisticated grays */
+    --background: 0 0% 100%;
+    --foreground: 210 24% 16%;
+    
+    /* Surface & Cards - Elevated materials */
+    --surface-primary: 0 0% 100%;
+    --surface-secondary: 210 16% 98%;
+    --surface-tertiary: 210 16% 96%;
+    
+    /* Navigation - Premium glass morphism */
+    --nav-background: 0 0% 100%;
+    --nav-border: 210 20% 92%;
+    --nav-backdrop: 0 0% 100% / 0.8;
+    
+    /* Brand Colors - Sophisticated financial palette */
+    --primary: 210 100% 50%;
+    --primary-light: 210 100% 60%;
+    --primary-dark: 210 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Accent - Emerald with depth */
+    --accent: 158 64% 52%;
+    --accent-light: 158 64% 62%;
+    --accent-dark: 158 64% 42%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Status Colors - Professional palette */
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --error: 0 72% 51%;
+    
+    /* Text Hierarchy */
+    --text-primary: 210 24% 16%;
+    --text-secondary: 210 16% 46%;
+    --text-tertiary: 210 12% 60%;
+    --text-quaternary: 210 10% 71%;
+    
+    /* Interactive Elements */
+    --border: 210 20% 90%;
+    --border-strong: 210 20% 84%;
+    --input: 210 16% 96%;
+    --ring: 210 100% 50%;
+    
+    /* Crypto Brand Colors - Authentic brand colors */
+    --near-primary: 0 0% 0%;
+    --ethereum-primary: 240 100% 67%;
+    --wallet-connect: 220 100% 69%;
+    --metamask: 25 100% 50%;
+    --coinbase: 214 100% 59%;
+    
+    /* Sophisticated Shadows - Multiple elevation levels */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    
+    /* Premium Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(210 100% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(158 64% 52%) 0%, hsl(158 64% 62%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 16% 98%) 100%);
+    --gradient-glass: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    
+    /* Typography Scale */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+    
+    /* Spacing Scale - 8pt grid system */
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-* {
-  box-sizing: border-box;
+/* Premium Component Styles */
+@layer components {
+  /* Glass Morphism Navigation */
+  .nav-glass {
+    backdrop-filter: blur(24px);
+    background-color: hsl(var(--nav-backdrop));
+    border-color: hsl(var(--nav-border));
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Premium Button Variants */
+  .btn-primary {
+    background-image: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    box-shadow: var(--shadow-md);
+  }
+  
+  .btn-accent {
+    background-image: var(--gradient-accent);
+    color: hsl(var(--accent-foreground));
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Wallet Item Styling */
+  .wallet-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 300ms;
+  }
+  
+  .wallet-item:hover {
+    background-color: hsl(var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+  
+  /* Premium Typography */
+  .heading-1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: hsl(var(--text-primary));
+    font-family: var(--font-sans);
+  }
+  
+  .heading-2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: hsl(var(--text-primary));
+  }
+  
+  .body-large {
+    font-size: 1.125rem;
+    color: hsl(var(--text-secondary));
+    line-height: 1.625;
+  }
+  
+  .body-small {
+    font-size: 0.875rem;
+    color: hsl(var(--text-tertiary));
+  }
+  
+  /* Brand Logo */
+  .logo-gradient {
+    background-image: var(--gradient-primary);
+    box-shadow: var(--shadow-lg);
+  }
 }
