@@ -8,11 +8,11 @@ GroupWeave is the open-source infrastructure for user-owned AI, designed to enab
 
 Please fork the repository, then create a branch and make the changes you wish to propose. Once the feature or fix is successfully implemented, resolve any conflicts with main locally. Finally, make a pull request and submit for review. Code contributions have to be approved by the maintainer(s), one at this time, and two when the project has grown. 
 
-## How to use
+## Documentation
 
-Do not deploy any of the apps or smart contracts yet. The standards for merging will increase in a week. Please check back later in August. 
+All technical documentation for this project, including setup, development workflows, and smart contract details, is located in the [`/docs`](./docs) directory.
 
-This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup. 
+For a complete guide on how to get started, please see the **[Development Guide](./docs/development.md)**.
 
 ## Roadmap
 
