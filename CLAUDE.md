@@ -3,7 +3,7 @@
 ## Repository Context
 - This is a user-owned AI platform with web, mobile, and blockchain components.
 - Follows strict TypeScript practices with a zero-warnings policy.
-- Uses Radix UI for a consistent component library.
+- Uses a shared component library (`@repo/ui`), which may use Radix UI internally for consistency.
 
 ## Development Preferences
 - Always run `pnpm lint` and `pnpm check-types` before committing.
