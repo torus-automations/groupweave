@@ -17,7 +17,7 @@ def generate_agents_md(data):
         str: The formatted markdown content for the AGENTS.md file.
     """
     content = f"# {data['projectName']} Monorepo - Agent & Developer Instructions\n\n"
-    content += "This document provides comprehensive instructions for developers and AI agents...\n\n"
+    content += f"{data.get('agentsIntroduction', 'This document provides comprehensive instructions for developers and AI agents working on this monorepo.')}\n\n"
     content += "## Overview\n"
     content += f"{data['projectDescription']}\n\n"
     content += "## Monorepo Tooling\n"
