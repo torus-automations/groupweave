@@ -8,11 +8,23 @@ GroupWeave is the open-source infrastructure for user-owned AI, designed to enab
 
 Please fork the repository, then create a branch and make the changes you wish to propose. Once the feature or fix is successfully implemented, resolve any conflicts with main locally. Finally, make a pull request and submit for review. Code contributions have to be approved by the maintainer(s), one at this time, and two when the project has grown. 
 
-## Documentation
+## How to use
 
-All technical documentation for this project, including setup, development workflows, and smart contract details, is located in the [`/docs`](./docs) directory.
+Do not deploy any of the apps or smart contracts yet. The standards for merging will increase in a week. Please check back later in August.
 
-For a complete guide on how to get started, please see the **[Development Guide](./docs/development.md)**.
+This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup.
+
+## Automated Documentation
+
+To ensure consistency across the various documentation files (`AGENTS.md`, `CLAUDE.md`, etc.), this repository uses a script to generate them from a single source of truth (`docs.json`).
+
+When you make changes to the repository that require documentation updates (e.g., adding a new workspace, changing build commands), you should:
+1.  Update the `docs.json` file with the new information.
+2.  Run the generation script to update the documentation files:
+    ```bash
+    python generate_docs.py
+    ```
+3.  Commit the changes to `docs.json` and the generated documentation files.
 
 ## Roadmap
 

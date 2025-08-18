@@ -1,0 +1,58 @@
+import json
+
+def generate_agents_md(data):
+    """Generates the content for AGENTS.md."""
+    content = f"# {data['projectName']} Monorepo - Agent & Developer Instructions\n\n"
+    content += "This document provides comprehensive instructions for developers and AI agents...\n\n"
+    content += "## Overview\n"
+    content += f"{data['projectDescription']}\n\n"
+    content += "## Monorepo Tooling\n"
+    for tool in data['tooling']:
+        content += f"### {tool['name']}\n{tool['description']}\n\n"
+    content += "## Global Commands\n"
+    for cmd in data['globalCommands']:
+        content += f"- `{cmd['command']}`: {cmd['description']}\n"
+    content += "\n"
+    content += "## Workspace Details\n"
+    for ws in data['workspaces']:
+        content += f"- **`{ws['name']}`**: {ws['description']}\n"
+    content += "\n"
+    content += "## Coding Style & Linting\n"
+    for lang, style in data['codingStyle'].items():
+        content += f"### {lang.replace('/', ' / ').title()}\n- {style}\n\n"
+    return content
+
+def generate_claude_md(data):
+    """Generates the content for CLAUDE.md."""
+    content = f"# Claude Instructions for {data['projectName']}\n\n"
+    content += "For all instructions on working with this monorepo, please refer to the main developer and agent guide:\n\n"
+    content += "**[./AGENTS.md](./AGENTS.md)**\n\n"
+    content += "This file serves as the single source of truth for repository setup, development workflows, and coding standards."
+    return content
+
+def generate_copilot_instructions(data):
+    """Generates the content for .github/copilot-instructions.md."""
+    content = f"# GitHub Copilot Instructions for {data['projectName']}\n\n"
+    content += "For all instructions on working with this monorepo, please refer to the main developer and agent guide:\n\n"
+    content += "**[../AGENTS.md](../AGENTS.md)**\n\n"
+    content += "This file serves as the single source of truth for repository setup, development workflows, and coding standards."
+    return content
+
+def main():
+    """Main function to generate all documentation files."""
+    with open('docs.json', 'r') as f:
+        data = json.load(f)
+
+    with open('AGENTS.md', 'w') as f:
+        f.write(generate_agents_md(data))
+
+    with open('CLAUDE.md', 'w') as f:
+        f.write(generate_claude_md(data))
+
+    with open('.github/copilot-instructions.md', 'w') as f:
+        f.write(generate_copilot_instructions(data))
+
+    print("Documentation files generated successfully.")
+
+if __name__ == "__main__":
+    main()
