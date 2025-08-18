@@ -1,7 +1,21 @@
 import json
 
 def generate_agents_md(data):
-    """Generates the content for AGENTS.md."""
+    """
+    Generate the markdown content for the AGENTS.md file.
+
+    Args:
+        data (dict): A dictionary containing project information. Expected keys include:
+            - 'projectName' (str): The name of the project.
+            - 'projectDescription' (str): A description of the project.
+            - 'tooling' (list of dict): List of tools, each with 'name' and 'description'.
+            - 'globalCommands' (list of dict): List of commands, each with 'command' and 'description'.
+            - 'workspaces' (list of dict): List of workspaces, each with 'name' and 'description'.
+            - 'codingStyle' (dict): Mapping of language names to style descriptions.
+
+    Returns:
+        str: The formatted markdown content for the AGENTS.md file.
+    """
     content = f"# {data['projectName']} Monorepo - Agent & Developer Instructions\n\n"
     content += "This document provides comprehensive instructions for developers and AI agents...\n\n"
     content += "## Overview\n"
