@@ -39,18 +39,26 @@ You can run these commands from the root of the repository. Turborepo will execu
 
 ## Workspace Details
 
-### Frontend Apps (`apps/web`, `apps/docs`)
+### Frontend Apps (`apps/creation`, `apps/participation`, `apps/dashboard`, `apps/docs`)
 
-The `apps/web` and `apps/docs` directories contain Next.js applications written in TypeScript.
+The frontend applications are Next.js applications written in TypeScript.
 
--   **`apps/web`**: The main GroupWeave web application.
+-   **`apps/creation`**: The application for creating new voting rounds.
+-   **`apps/participation`**: The application for participating in voting rounds.
+-   **`apps/dashboard`**: The application for viewing the results of voting rounds.
 -   **`apps/docs`**: The documentation website.
 
 **To run a specific frontend app:**
 
 ```bash
-# To run the web app (available at http://localhost:3002)
-pnpm --filter web dev
+# To run the creation app (available at http://localhost:3003)
+pnpm --filter creation dev
+
+# To run the participation app (available at http://localhost:3002)
+pnpm --filter participation dev
+
+# To run the dashboard app (available at http://localhost:3004)
+pnpm --filter dashboard dev
 
 # To run the docs site (available at http://localhost:3001)
 pnpm --filter docs dev

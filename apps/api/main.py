@@ -119,10 +119,31 @@ class VideoGenerationResponse(BaseModel):
     generation_time: float
     metadata: Dict[str, Any]
 
+class CreateRoundRequest(BaseModel):
+    criteria: str
+    image1_data: str  # Base64 encoded image
+    image2_data: str  # Base64 encoded image
+
+class Image(BaseModel):
+    id: int
+    data: str # Base64 encoded
+    votes: int = 0
+
+class Round(BaseModel):
+    id: int
+    criteria: str
+    images: List[Image]
+
+class VoteRequest(BaseModel):
+    image_id: int
+
 # In-memory storage (replace with proper database in production)
 voting_data = {}
 governance_insights = []
 staking_data = {}
+rounds_data: Dict[int, Round] = {}
+next_round_id = 0
+
 
 @app.get("/")
 async def root():
@@ -313,6 +334,52 @@ async def ai_decision_support(request: AIDecisionRequest):
     except Exception as e:
         logger.error(f"Error in decision support: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Decision support failed: {str(e)}")
+
+@app.post("/rounds", response_model=Round)
+async def create_round(request: CreateRoundRequest):
+    global next_round_id
+    round_id = next_round_id
+
+    new_round = Round(
+        id=round_id,
+        criteria=request.criteria,
+        images=[
+            Image(id=1, data=request.image1_data, votes=0),
+            Image(id=2, data=request.image2_data, votes=0)
+        ]
+    )
+    rounds_data[round_id] = new_round
+    next_round_id += 1
+    return new_round
+
+@app.get("/rounds", response_model=List[Round])
+async def get_rounds():
+    return list(rounds_data.values())
+
+@app.get("/rounds/{round_id}", response_model=Round)
+async def get_round(round_id: int):
+    if round_id not in rounds_data:
+        raise HTTPException(status_code=404, detail="Round not found")
+    return rounds_data[round_id]
+
+@app.post("/rounds/{round_id}/vote", response_model=Round)
+async def vote_on_round(round_id: int, request: VoteRequest):
+    if round_id not in rounds_data:
+        raise HTTPException(status_code=404, detail="Round not found")
+
+    round_ = rounds_data[round_id]
+
+    image_found = False
+    for img in round_.images:
+        if img.id == request.image_id:
+            img.votes += 1
+            image_found = True
+            break
+
+    if not image_found:
+        raise HTTPException(status_code=404, detail="Image not found in this round")
+
+    return round_
 
 @app.get("/data/voting-history")
 async def get_voting_history():
