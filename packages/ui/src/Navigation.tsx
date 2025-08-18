@@ -9,8 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Wallet, ChevronDown, Shield, LogOut } from "lucide-react";
-import { navItems } from './config/navigation';
-import { Logo } from './Logo';
 
 interface NavigationProps {
   className?: string;
@@ -20,6 +18,13 @@ interface NavigationProps {
 }
 
 export const Navigation = ({ className, accountId, onConnect, onDisconnect }: NavigationProps): React.ReactElement => {
+  const navItems = [
+    { name: "Products", href: "#products" },
+    { name: "Solutions", href: "#solutions" },
+    { name: "Developers", href: "#developers" },
+    { name: "Company", href: "#company" },
+  ];
+
   const formatAccountId = (id: string) => {
     if (id.length > 20) {
       return `${id.slice(0, 10)}...${id.slice(-4)}`;
@@ -29,7 +34,13 @@ export const Navigation = ({ className, accountId, onConnect, onDisconnect }: Na
 
   return (
     <nav 
-      className="fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-[12px] border-black/10 shadow-sm"
+      className="fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ease-in-out"
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -37,7 +48,12 @@ export const Navigation = ({ className, accountId, onConnect, onDisconnect }: Na
           <div className="flex items-center">
             <div className="flex items-center gap-3">
               {/* Premium Logo */}
-              <Logo className="w-10 h-10" />
+              <div className="relative group cursor-pointer">
+                <div className="w-10 h-10 rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:rotate-3" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+                  <div className="w-6 h-6 bg-white rounded-md transition-all duration-300 group-hover:bg-opacity-90"></div>
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full shadow-md transition-all duration-300 group-hover:scale-125 group-hover:animate-pulse"></div>
+              </div>
               
               {/* Brand Typography */}
               <div className="flex flex-col group cursor-pointer">
