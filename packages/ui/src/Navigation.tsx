@@ -7,54 +7,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
-import { Wallet, ChevronDown, Shield, ArrowUpRight } from "lucide-react";
+import { Wallet, ChevronDown, Shield, LogOut } from "lucide-react";
 
 interface NavigationProps {
   className?: string;
+  accountId: string | null;
+  onConnect: () => void;
+  onDisconnect: () => void;
 }
 
-export const Navigation = ({ className }: NavigationProps): React.ReactElement => {
-  const walletOptions = [
-    {
-      name: "NEAR Protocol",
-      tag: "Recommended",
-      icon: "◼",
-      color: "text-crypto-near",
-      bgColor: "bg-crypto-near/10",
-      description: "Fast & low-cost transactions"
-    },
-    {
-      name: "Ethereum Wallets",
-      icon: "♦",
-      color: "text-crypto-ethereum",
-      bgColor: "bg-crypto-ethereum/10",
-      description: "MetaMask, Coinbase, WalletConnect"
-    },
-    {
-      name: "MetaMask",
-      icon: "🦊",
-      color: "text-crypto-metamask",
-      bgColor: "bg-crypto-metamask/10",
-      description: "Most popular browser wallet"
-    },
-    {
-      name: "WalletConnect",
-      icon: "🔗",
-      color: "text-crypto-walletconnect",
-      bgColor: "bg-crypto-walletconnect/10",
-      description: "Connect mobile wallets"
-    },
-    {
-      name: "Coinbase Wallet",
-      icon: "🔵",
-      color: "text-crypto-coinbase",
-      bgColor: "bg-crypto-coinbase/10",
-      description: "Secure & user-friendly"
-    },
-  ];
-
+export const Navigation = ({ className, accountId, onConnect, onDisconnect }: NavigationProps): React.ReactElement => {
   const navItems = [
     { name: "Products", href: "#products" },
     { name: "Solutions", href: "#solutions" },
@@ -62,9 +25,11 @@ export const Navigation = ({ className }: NavigationProps): React.ReactElement =
     { name: "Company", href: "#company" },
   ];
 
-  const handleWalletConnect = (walletName: string) => {
-    console.log(`Connecting to ${walletName}...`);
-    // Add your wallet connection logic here
+  const formatAccountId = (id: string) => {
+    if (id.length > 20) {
+      return `${id.slice(0, 10)}...${id.slice(-4)}`;
+    }
+    return id;
   };
 
   return (
@@ -124,74 +89,44 @@ export const Navigation = ({ className }: NavigationProps): React.ReactElement =
               <span className="text-xs font-medium text-green-700 transition-colors duration-300 group-hover:text-green-800">Secured</span>
             </div>
 
-            {/* Wallet Connect Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="wallet"
-                  className="relative overflow-hidden group transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                >
-                  <div className="flex items-center gap-2 relative z-10">
-                    <div className="p-1.5 rounded-md bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
-                      <Wallet className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="font-medium text-gray-700 group-hover:text-gray-900 transition-colors duration-300">Connect</span>
-                    <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-all duration-300 group-hover:rotate-180" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="w-80 p-4 mt-2 border border-gray-200 bg-white rounded-xl shadow-xl"
-                style={{backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255, 255, 255, 0.95)'}}
-              >
-                {/* Header */}
-                <div className="mb-4 pb-3 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-900 mb-1">Connect Wallet</h3>
-                  <p className="text-sm text-gray-600">Choose your preferred wallet to get started</p>
-                </div>
-
-                {/* Wallet Options */}
-                <div className="space-y-2 mb-4">
-                  {walletOptions.map((wallet, index) => (
-                    <DropdownMenuItem
-                      key={index}
-                      className="p-0 focus:bg-transparent"
-                      onClick={() => handleWalletConnect(wallet.name)}
-                    >
-                      <div className="w-full p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all duration-300 cursor-pointer group">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg ${wallet.bgColor || 'bg-gray-100'} flex items-center justify-center text-lg font-bold transition-transform duration-300 group-hover:scale-110`}>
-                            {wallet.icon}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-300">{wallet.name}</span>
-                              {wallet.tag && (
-                                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">{wallet.tag}</span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 mt-0.5">{wallet.description}</p>
-                          </div>
-                          <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                        </div>
+            {/* Wallet Connect Button / Dropdown */}
+            {accountId ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="wallet"
+                    className="relative overflow-hidden group transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  >
+                    <div className="flex items-center gap-2 relative z-10">
+                      <div className="p-1.5 rounded-md bg-green-100 group-hover:bg-green-200 transition-colors duration-300">
+                        <Wallet className="w-4 h-4 text-green-600" />
                       </div>
-                    </DropdownMenuItem>
-                  ))}
+                      <span className="font-medium text-gray-700 group-hover:text-gray-900 transition-colors duration-300">{formatAccountId(accountId)}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-all duration-300 group-hover:rotate-180" />
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2">
+                  <DropdownMenuItem onClick={onDisconnect} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Disconnect</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="wallet"
+                className="relative overflow-hidden group transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                onClick={onConnect}
+              >
+                <div className="flex items-center gap-2 relative z-10">
+                  <div className="p-1.5 rounded-md bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
+                    <Wallet className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="font-medium text-gray-700 group-hover:text-gray-900 transition-colors duration-300">Connect Wallet</span>
                 </div>
-
-                <DropdownMenuSeparator className="my-3" />
-
-                {/* Footer */}
-                <div className="text-center pt-2">
-                  <p className="text-xs text-gray-500">
-                    New to crypto? <span className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium">Learn more</span>
-                  </p>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Button>
+            )}
           </div>
         </div>
       </div>

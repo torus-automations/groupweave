@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import NavigationClient from "../components/NavigationClient";
+import { WalletContextProvider } from "../components/WalletContextProvider";
 import "../styles/globals.css";
 
 const geistSans = localFont({
@@ -33,12 +34,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="min-h-screen flex flex-col" style={{backgroundColor: 'hsl(var(--background))'}}>
-          <NavigationClient />
-          <main className="flex-1 flex flex-col" role="main">
-            {children}
-          </main>
-        </div>
+        <WalletContextProvider>
+          <div className="min-h-screen flex flex-col" style={{backgroundColor: 'hsl(var(--background))'}}>
+            <NavigationClient />
+            <main className="flex-1 flex flex-col" role="main">
+              {children}
+            </main>
+          </div>
+        </WalletContextProvider>
       </body>
     </html>
   );
