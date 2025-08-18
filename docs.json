@@ -1,0 +1,71 @@
+{
+  "projectName": "GroupWeave",
+  "projectDescription": "An open-source platform for user-owned AI, focusing on co-creation and co-immersion in generative content.",
+  "tooling": [
+    {
+      "name": "pnpm",
+      "description": "Used for package management. All npm/yarn commands should be replaced with pnpm."
+    },
+    {
+      "name": "Turborepo",
+      "description": "Used to manage tasks and build pipelines across the monorepo."
+    }
+  ],
+  "globalCommands": [
+    {
+      "command": "pnpm install",
+      "description": "Install all dependencies for all workspaces."
+    },
+    {
+      "command": "pnpm build",
+      "description": "Builds all apps and packages."
+    },
+    {
+      "command": "pnpm dev",
+      "description": "Runs all applications in development mode."
+    },
+    {
+      "command": "pnpm lint",
+      "description": "Lints all apps and packages."
+    }
+  ],
+  "workspaces": [
+    {
+      "name": "apps/web",
+      "description": "The main GroupWeave web application (Next.js)."
+    },
+    {
+      "name": "apps/docs",
+      "description": "The documentation website (Next.js)."
+    },
+    {
+      "name": "apps/mobile",
+      "description": "A React Native application built with Expo."
+    },
+    {
+      "name": "apps/api",
+      "description": "A FastAPI backend."
+    },
+    {
+      "name": "apps/agents",
+      "description": "Contains multiple Rust-based AI agent binaries."
+    },
+    {
+      "name": "apps/contracts",
+      "description": "A workspace containing NEAR smart contracts."
+    },
+    {
+      "name": "packages/ui",
+      "description": "Shared React component library."
+    },
+    {
+      "name": "packages/common-types",
+      "description": "Shared TypeScript types."
+    }
+  ],
+  "codingStyle": {
+    "javascript/typescript": "Formatted with Prettier, linted with ESLint. Follows a specific import order.",
+    "python": "Formatted with black and isort, linted with flake8 and mypy.",
+    "rust": "Formatted with rustfmt, linted with cargo clippy."
+  }
+}

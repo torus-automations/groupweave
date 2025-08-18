@@ -10,9 +10,21 @@ Please fork the repository, then create a branch and make the changes you wish t
 
 ## How to use
 
-Do not deploy any of the apps or smart contracts yet. The standards for merging will increase in a week. Please check back later in August. 
+Do not deploy any of the apps or smart contracts yet. The standards for merging will increase in a week. Please check back later in August.
 
-This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup. 
+This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup.
+
+## Automated Documentation
+
+To ensure consistency across the various documentation files (`AGENTS.md`, `CLAUDE.md`, etc.), this repository uses a script to generate them from a single source of truth (`docs.json`).
+
+When you make changes to the repository that require documentation updates (e.g., adding a new workspace, changing build commands), you should:
+1.  Update the `docs.json` file with the new information.
+2.  Run the generation script to update the documentation files:
+    ```bash
+    python generate_docs.py
+    ```
+3.  Commit the changes to `docs.json` and the generated documentation files.
 
 ## Roadmap
 
