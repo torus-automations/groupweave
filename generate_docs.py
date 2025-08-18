@@ -55,7 +55,18 @@ def generate_copilot_instructions(data):
 def main():
     """Main function to generate all documentation files."""
     with open('docs.json', 'r') as f:
-        data = json.load(f)
+    try:
+        with open('docs.json', 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print("Error: 'docs.json' file not found. Please ensure the file exists in the current directory.")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to parse 'docs.json': {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred while reading 'docs.json': {e}")
+        sys.exit(1)
 
     with open('AGENTS.md', 'w') as f:
         f.write(generate_agents_md(data))
