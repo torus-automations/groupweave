@@ -1,6 +1,6 @@
 # GroupWeave Monorepo - Agent Instructions
 
-Welcome, agent! This document provides instructions for working within the GroupWeave monorepo. This project is a complex system with multiple applications and services. Adhering to these guidelines will ensure consistency and correctness.
+This document provides instructions for working within the GroupWeave monorepo. This project is a complex system with multiple applications and services. Adhering to these guidelines will ensure consistency and correctness.
 
 ## Table of Contents
 
