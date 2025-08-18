@@ -3,18 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-
-interface Image {
-  id: number;
-  data: string;
-  votes: number;
-}
-
-interface Round {
-  id: number;
-  criteria: string;
-  images: Image[];
-}
+import type { Image, Round } from '@groupweave/common-types';
 
 export default function Home(): JSX.Element {
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -24,7 +13,8 @@ export default function Home(): JSX.Element {
   const fetchRounds = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/rounds');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/rounds`);
       if (!response.ok) {
         throw new Error('Failed to fetch rounds');
       }

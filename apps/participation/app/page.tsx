@@ -2,18 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styles from '../styles/Game.module.css';
-
-interface Image {
-  id: number;
-  data: string; // Base64 encoded image
-  votes: number;
-}
-
-interface Round {
-  id: number;
-  criteria: string;
-  images: Image[];
-}
+import type { Image, Round, VoteRequest } from '@groupweave/common-types';
 
 export default function Home() {
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -26,7 +15,8 @@ export default function Home() {
   useEffect(() => {
     const fetchRounds = async () => {
       try {
-        const response = await fetch('http://localhost:8000/rounds');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/rounds`);
         if (!response.ok) {
           throw new Error('Failed to fetch rounds');
         }
@@ -53,7 +43,8 @@ export default function Home() {
     const roundId = rounds[currentRoundIndex].id;
 
     try {
-      const response = await fetch(`http://localhost:8000/rounds/${roundId}/vote`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/rounds/${roundId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +61,7 @@ export default function Home() {
       // Optimistically update the vote count locally
       const updatedRounds = [...rounds];
       const votedImage = updatedRounds[currentRoundIndex].images.find(img => img.id === imageId);
-      if(votedImage) {
+      if (votedImage) {
         votedImage.votes += 1;
       }
       setRounds(updatedRounds);

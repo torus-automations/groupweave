@@ -1,9 +1,10 @@
 'use client';
 
 import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/ui/input';
-import { Label } from '@repo/ui/ui/label';
-import { useState } from 'react';
+import { Input } from '@repo/ui/input';
+import { Label } from '@repo/ui/label';
+import { useState, useRef } from 'react';
+import type { CreateRoundRequest, Round } from '@groupweave/common-types';
 
 export default function Home(): JSX.Element {
   const [criteria, setCriteria] = useState('');
@@ -11,6 +12,10 @@ export default function Home(): JSX.Element {
   const [image2, setImage2] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  
+  const criteriaRef = useRef<HTMLInputElement>(null);
+  const image1Ref = useRef<HTMLInputElement>(null);
+  const image2Ref = useRef<HTMLInputElement>(null);
 
   const toBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -34,7 +39,8 @@ export default function Home(): JSX.Element {
       const image1_data = await toBase64(image1);
       const image2_data = await toBase64(image2);
 
-      const response = await fetch('http://localhost:8000/rounds', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/rounds`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,10 +62,10 @@ export default function Home(): JSX.Element {
       setCriteria('');
       setImage1(null);
       setImage2(null);
-      // Reset file inputs
-      (document.getElementById('criteria') as HTMLInputElement).value = '';
-      (document.getElementById('image1') as HTMLInputElement).value = '';
-      (document.getElementById('image2') as HTMLInputElement).value = '';
+      // Reset file inputs using refs
+      if (criteriaRef.current) criteriaRef.current.value = '';
+      if (image1Ref.current) image1Ref.current.value = '';
+      if (image2Ref.current) image2Ref.current.value = '';
 
     } catch (error) {
       console.error(error);
@@ -80,6 +86,7 @@ export default function Home(): JSX.Element {
         <div style={{ marginBottom: '15px' }}>
           <Label htmlFor="criteria">Criteria</Label>
           <Input
+            ref={criteriaRef}
             id="criteria"
             type="text"
             placeholder="e.g. Which is more aesthetic?"
@@ -91,6 +98,7 @@ export default function Home(): JSX.Element {
         <div style={{ marginBottom: '15px' }}>
           <Label htmlFor="image1">Image 1</Label>
           <Input
+            ref={image1Ref}
             id="image1"
             type="file"
             accept="image/*"
@@ -101,6 +109,7 @@ export default function Home(): JSX.Element {
         <div style={{ marginBottom: '15px' }}>
           <Label htmlFor="image2">Image 2</Label>
           <Input
+            ref={image2Ref}
             id="image2"
             type="file"
             accept="image/*"
