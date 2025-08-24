@@ -23,7 +23,7 @@ seaborn==0.12.2
 # Database and storage
 sqlalchemy==2.0.23
 alembic==1.12.1
-psycopg2-binary==2.9.7
+psycopg2-binary==2.9.10
 redis==5.0.1
 
 # Blockchain and Web3
