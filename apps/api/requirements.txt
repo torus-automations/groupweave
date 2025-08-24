@@ -43,7 +43,7 @@ python-multipart==0.0.6
 
 # Configuration and environment
 python-dotenv==1.0.0
-pyyaml==6.0.1
+pyyaml==6.0.2
 
 # Logging and monitoring
 loguru==0.7.3
