@@ -46,7 +46,7 @@ python-dotenv==1.0.0
 pyyaml==6.0.1
 
 # Logging and monitoring
-loguru==0.7.2
+loguru==0.7.3
 prometheus-client==0.19.0
 
 # Testing
