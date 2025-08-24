@@ -1,6 +1,6 @@
 # GroupWeave Monorepo - Agent & Developer Instructions
 
-This document provides comprehensive instructions for developers and AI agents...
+This document provides comprehensive instructions for developers and AI agents working on this monorepo.
 
 ## Overview
 An open-source platform for user-owned AI, focusing on co-creation and co-immersion in generative content.
@@ -28,6 +28,26 @@ Used to manage tasks and build pipelines across the monorepo.
 - **`packages/ui`**: Shared React component library.
 - **`packages/common-types`**: Shared TypeScript types.
 
+## Dependency Management
+**⚠️ IMPORTANT: All dependency updates are handled by Renovate. Do not manually update dependencies.**
+
+This repository uses [Renovate](https://docs.renovatebot.com/) to automatically manage dependency updates across all languages and frameworks. Renovate creates PRs for dependency updates that should be reviewed and merged by maintainers.
+
+### What Renovate Manages
+- **JavaScript/TypeScript**: npm packages in all `package.json` files
+- **Python**: Dependencies in `requirements.txt` files
+- **Rust**: Crates in `Cargo.toml` files
+- **Docker**: Base images in `Dockerfile` and `docker-compose.yaml`
+- **GitHub Actions**: Action versions in workflow files
+
+### For Contributors & AI Agents
+- ✅ **DO**: Add new dependencies as needed for features (`pnpm add`, `pip install`, `cargo add`)
+- ❌ **DON'T**: Update existing dependency versions manually
+- ❌ **DON'T**: Modify `pnpm-lock.yaml`, lockfiles, or version ranges unless adding new deps
+- 🔍 **REVIEW**: Test and approve Renovate PRs when they appear
+
+Manual dependency updates will conflict with Renovate and should be avoided. If you encounter urgent security issues requiring immediate dependency updates, create an issue and tag maintainers.
+
 ## Coding Style & Linting
 ### Javascript / Typescript
 - Formatted with Prettier, linted with ESLint. Follows a specific import order.
@@ -37,3 +57,4 @@ Used to manage tasks and build pipelines across the monorepo.
 
 ### Rust
 - Formatted with rustfmt, linted with cargo clippy.
+

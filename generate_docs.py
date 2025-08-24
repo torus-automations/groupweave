@@ -1,4 +1,5 @@
 import json
+import sys
 
 def generate_agents_md(data):
     """
@@ -31,6 +32,23 @@ def generate_agents_md(data):
     for ws in data['workspaces']:
         content += f"- **`{ws['name']}`**: {ws['description']}\n"
     content += "\n"
+    
+    # Add dependency management section if it exists
+    if 'dependencyManagement' in data:
+        dep_mgmt = data['dependencyManagement']
+        content += f"## {dep_mgmt['title']}\n"
+        content += f"**{dep_mgmt['warning']}**\n\n"
+        content += f"{dep_mgmt['description']}\n\n"
+        content += "### What Renovate Manages\n"
+        for item in dep_mgmt['managedBy']:
+            content += f"- {item}\n"
+        content += "\n"
+        content += "### For Contributors & AI Agents\n"
+        for guideline in dep_mgmt['guidelines']:
+            content += f"- {guideline}\n"
+        content += "\n"
+        content += f"{dep_mgmt['note']}\n\n"
+    
     content += "## Coding Style & Linting\n"
     for lang, style in data['codingStyle'].items():
         content += f"### {lang.replace('/', ' / ').title()}\n- {style}\n\n"
@@ -54,7 +72,6 @@ def generate_copilot_instructions(data):
 
 def main():
     """Main function to generate all documentation files."""
-    with open('docs.json', 'r') as f:
     try:
         with open('docs.json', 'r') as f:
             data = json.load(f)

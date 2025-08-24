@@ -63,6 +63,25 @@
       "description": "Shared TypeScript types."
     }
   ],
+  "dependencyManagement": {
+    "title": "Dependency Management",
+    "warning": "⚠️ IMPORTANT: All dependency updates are handled by Renovate. Do not manually update dependencies.",
+    "description": "This repository uses [Renovate](https://docs.renovatebot.com/) to automatically manage dependency updates across all languages and frameworks. Renovate creates PRs for dependency updates that should be reviewed and merged by maintainers.",
+    "managedBy": [
+      "**JavaScript/TypeScript**: npm packages in all `package.json` files",
+      "**Python**: Dependencies in `requirements.txt` files",
+      "**Rust**: Crates in `Cargo.toml` files",
+      "**Docker**: Base images in `Dockerfile` and `docker-compose.yaml`",
+      "**GitHub Actions**: Action versions in workflow files"
+    ],
+    "guidelines": [
+      "✅ **DO**: Add new dependencies as needed for features (`pnpm add`, `pip install`, `cargo add`)",
+      "❌ **DON'T**: Update existing dependency versions manually",
+      "❌ **DON'T**: Modify `pnpm-lock.yaml`, lockfiles, or version ranges unless adding new deps",
+      "🔍 **REVIEW**: Test and approve Renovate PRs when they appear"
+    ],
+    "note": "Manual dependency updates will conflict with Renovate and should be avoided. If you encounter urgent security issues requiring immediate dependency updates, create an issue and tag maintainers."
+  },
   "codingStyle": {
     "javascript/typescript": "Formatted with Prettier, linted with ESLint. Follows a specific import order.",
     "python": "Formatted with black and isort, linted with flake8 and mypy.",
