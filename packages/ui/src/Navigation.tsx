@@ -11,11 +11,17 @@ import {
 } from "./ui/dropdown-menu";
 import { Wallet, ChevronDown, Shield, ArrowUpRight } from "lucide-react";
 
-interface NavigationProps {
-  className?: string;
+export interface NavigationItem {
+  name: string;
+  href: string;
 }
 
-export const Navigation = ({ className }: NavigationProps): React.ReactElement => {
+interface NavigationProps {
+  className?: string;
+  navItems?: NavigationItem[];
+}
+
+export const Navigation = ({ className, navItems = [] }: NavigationProps): React.ReactElement => {
   const walletOptions = [
     { 
       name: "NEAR Protocol", 
@@ -55,12 +61,14 @@ export const Navigation = ({ className }: NavigationProps): React.ReactElement =
     },
   ];
 
-  const navItems = [
-    { name: "Products", href: "#products" },
-    { name: "Solutions", href: "#solutions" },
-    { name: "Developers", href: "#developers" },
+  // Default navigation items if none provided
+  const defaultNavItems = [
+    { name: "Dreamweave", href: "#dreamweave" },
+    { name: "Groupweave", href: "#groupweave" },
     { name: "Company", href: "#company" },
   ];
+
+  const navigationItems = navItems.length > 0 ? navItems : defaultNavItems;
 
   const handleWalletConnect = (walletName: string) => {
     console.log(`Connecting to ${walletName}...`);
@@ -104,7 +112,7 @@ export const Navigation = ({ className }: NavigationProps): React.ReactElement =
 
           {/* Center Navigation Links */}
           <div className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) => (
+            {navigationItems.map((item) => (
               <Button 
                 key={item.name}
                 variant="minimal" 
