@@ -4,7 +4,7 @@ import pathAlias from 'esbuild-plugin-path-alias';
 export default defineConfig((options: Options) => ({
   entry: ["src/**/*.tsx", "src/**/*.ts"],
   format: ["esm", "cjs"],
-  dts: false, // Temporarily disable DTS to fix build issues
+  dts: true,
   minify: true,
   external: ["react"],
   esbuildPlugins: [pathAlias({ alias: { "@": "./src" } })],
