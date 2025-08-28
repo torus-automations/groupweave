@@ -14,6 +14,12 @@ Do not deploy any of the apps or smart contracts yet. The standards for merging 
 
 This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup.
 
+## Connect with us
+[![Website](https://readmecodegen.vercel.app/api/social-icon?name=Link)](https://www.torus-automations.xyz/)
+[![Discord](https://readmecodegen.vercel.app/api/social-icon?name=Discord)](https://discord.gg/wgN9HhUM)
+[![Telegram](https://readmecodegen.vercel.app/api/social-icon?name=Telegram)](https://t.me/torusautomations)
+[![LinkedIn](https://readmecodegen.vercel.app/api/social-icon?name=LinkedIn)](https://www.linkedin.com/in/company/torus-automations/)
+
 ## Automated Documentation
 
 To ensure consistency across the various documentation files (`AGENTS.md`, `CLAUDE.md`, etc.), this repository uses a script to generate them from a single source of truth (`docs.json`).
