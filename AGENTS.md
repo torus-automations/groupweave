@@ -1,41 +1,22 @@
-# GroupWeave Monorepo - Agent Instructions
+# GroupWeave Monorepo - Agent & Developer Instructions
 
-This document provides instructions for working within the GroupWeave monorepo. This project is a complex system with multiple applications and services. Adhering to these guidelines will ensure consistency and correctness.
-
-## Table of Contents
-
-1.  [Overview](#overview)
-2.  [Monorepo Tooling](#monorepo-tooling)
-3.  [Global Commands](#global-commands)
-4.  [Workspace Details](#workspace-details)
-    -   [Frontend Apps (`apps/web`, `apps/docs`)](#frontend-apps)
-    -   [Mobile App (`apps/mobile`)](#mobile-app)
-    -   [Python API (`apps/api`)](#python-api)
-    -   [Rust Projects (`apps/agents`, `apps/contracts`)](#rust-projects)
-    -   [Shared Packages (`packages/*`)](#shared-packages)
-5.  [Dependencies](#dependencies)
-6.  [Coding Style & Linting](#coding-style--linting)
+This document provides comprehensive instructions for developers and AI agents...
 
 ## Overview
-
-GroupWeave is an open-source platform for user-owned AI, focusing on co-creation and co-immersion in generative content. This monorepo contains all the code for the web application, documentation site, mobile app, backend API, smart contracts, and AI agents.
+An open-source platform for user-owned AI, focusing on co-creation and co-immersion in generative content.
 
 ## Monorepo Tooling
+### pnpm
+Used for package management. All npm/yarn commands should be replaced with pnpm.
 
-This repository is a monorepo managed by **pnpm** and **Turborepo**.
-
--   **pnpm**: Used for package management. All `npm`/`yarn` commands should be replaced with `pnpm`.
--   **Turborepo**: Used to manage tasks and build pipelines across the monorepo.
+### Turborepo
+Used to manage tasks and build pipelines across the monorepo.
 
 ## Global Commands
-
-You can run these commands from the root of the repository. Turborepo will execute them in the relevant workspaces.
-
--   `pnpm build`: Builds all apps and packages.
--   `pnpm lint`: Lints all apps and packages.
--   `pnpm dev`: Runs all applications in development mode. (Note: This might be resource-intensive. It's often better to run a specific app's dev server).
--   `pnpm check-types`: Runs TypeScript type checking across all relevant packages.
--   `pnpm format`: Formats all supported files with Prettier.
+- `pnpm install`: Install all dependencies for all workspaces.
+- `pnpm build`: Builds all apps and packages.
+- `pnpm dev`: Runs all applications in development mode.
+- `pnpm lint`: Lints all apps and packages.
 
 ## Workspace Details
 
@@ -181,10 +162,12 @@ To install all dependencies for the monorepo, run this command from the root dir
 pnpm install
 ```
 
-This will install dependencies for all workspaces.
-
 ## Coding Style & Linting
+### Javascript / Typescript
+- Formatted with Prettier, linted with ESLint. Follows a specific import order.
 
--   **TypeScript/JavaScript**: Run `pnpm format` to format the code using Prettier. Run `pnpm lint` to check for code quality issues.
--   **Python**: Use `black` and `isort` for formatting, and `flake8` and `mypy` for linting.
--   **Rust**: Use `rustfmt` (usually via `cargo fmt`) for formatting and `cargo clippy` for linting.
+### Python
+- Formatted with black and isort, linted with flake8 and mypy.
+
+### Rust
+- Formatted with rustfmt, linted with cargo clippy.
