@@ -7,3 +7,4 @@ export * from './Navigation.js';
 export * from './ui/dropdown-menu.js';
 export * from './ui/toaster.js';
 export * from './hooks/use-toast.js';
+export * from './wallet/index.js';

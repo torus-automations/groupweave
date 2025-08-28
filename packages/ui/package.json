@@ -49,6 +49,7 @@
     "@near-wallet-selector/bitget-wallet": "^9.4.0",
     "@near-wallet-selector/bitte-wallet": "^9.4.0",
     "@near-wallet-selector/coin98-wallet": "^9.4.0",
+    "@near-wallet-selector/core": "^9.4.0",
     "@near-wallet-selector/ethereum-wallets": "^9.4.0",
     "@near-wallet-selector/here-wallet": "^9.4.0",
     "@near-wallet-selector/hot-wallet": "^9.4.0",
