@@ -26,6 +26,10 @@ pub struct StakingContract {
 impl StakingContract {
     #[init]
     pub fn new(reward_rate: u128, min_stake_amount: NearToken, max_stake_amount: NearToken) -> Self {
+        // Validate input parameters
+        assert!(min_stake_amount <= max_stake_amount, "Minimum stake amount cannot exceed maximum");
+        assert!(reward_rate > 0, "Reward rate must be positive");
+        
         Self {
             stakes: LookupMap::new(b"s"),
             total_staked: NearToken::from_yoctonear(0),
@@ -36,6 +40,31 @@ impl StakingContract {
         }
     }
 
+    // Helper function for safe token addition
+    fn safe_add_tokens(a: NearToken, b: NearToken) -> Result<NearToken, &'static str> {
+        a.as_yoctonear().checked_add(b.as_yoctonear())
+            .map(NearToken::from_yoctonear)
+            .ok_or("Token addition overflow")
+    }
+
+    // Helper function for safe token subtraction
+    fn safe_sub_tokens(a: NearToken, b: NearToken) -> Result<NearToken, &'static str> {
+        a.as_yoctonear().checked_sub(b.as_yoctonear())
+            .map(NearToken::from_yoctonear)
+            .ok_or("Token subtraction underflow")
+    }
+
+    // Helper function for safe reward calculation
+    fn calculate_rewards_safe(stake_amount: NearToken, reward_rate: u128, time_seconds: u64) -> u128 {
+        // Use checked arithmetic to prevent overflow
+        // Divide by the scaling factor last to maintain precision
+        stake_amount.as_yoctonear()
+            .checked_mul(reward_rate)
+            .and_then(|x| x.checked_mul(time_seconds as u128))
+            .and_then(|x| x.checked_div(1_000_000_000_000_000_000_000_000))
+            .unwrap_or(0) // Return 0 on overflow rather than panicking
+    }
+
     #[payable]
     pub fn stake(&mut self) {
         let staker = env::predecessor_account_id();
@@ -44,14 +73,25 @@ impl StakingContract {
         assert!(amount >= self.min_stake_amount, "Stake amount too low");
         assert!(amount <= self.max_stake_amount, "Stake amount too high");
         
+        // Validate that total stake (existing + new) doesn't exceed maximum
+        let new_total_stake = if let Some(existing_stake) = self.stakes.get(&staker) {
+            Self::safe_add_tokens(existing_stake.amount, amount)
+                .expect("Stake addition overflow")
+        } else {
+            amount
+        };
+        
+        assert!(new_total_stake <= self.max_stake_amount, "Total stake would exceed maximum allowed");
+        
         let current_time = env::block_timestamp();
         
         if let Some(mut stake_info) = self.stakes.get(&staker) {
             // Claim pending rewards before updating stake
             self.internal_claim_rewards(&staker, &mut stake_info);
             
-            // Add to existing stake
-            stake_info.amount = NearToken::from_yoctonear(stake_info.amount.as_yoctonear() + amount.as_yoctonear());
+            // Add to existing stake using safe addition
+            stake_info.amount = Self::safe_add_tokens(stake_info.amount, amount)
+                .expect("Stake addition overflow");
             stake_info.last_reward_claim = current_time;
             self.stakes.insert(&staker, &stake_info);
         } else {
@@ -64,25 +104,30 @@ impl StakingContract {
             self.stakes.insert(&staker, &stake_info);
         }
         
-        self.total_staked = NearToken::from_yoctonear(self.total_staked.as_yoctonear() + amount.as_yoctonear());
+        // Update total staked using safe addition
+        self.total_staked = Self::safe_add_tokens(self.total_staked, amount)
+            .expect("Total stake addition overflow");
 
-        env::log_str(&format!("STAKE: Account {} staked {} yoctoNEAR", staker, amount));
+        env::log_str(&format!("STAKE: Account {} staked {} NEAR", staker, amount));
     }
 
     pub fn unstake(&mut self, amount: NearToken) {
         let staker = env::predecessor_account_id();
         let mut stake_info = self.stakes.get(&staker).expect("No stake found");
         
-        assert!(stake_info.amount.as_yoctonear() >= amount.as_yoctonear(), "Insufficient staked amount");
+        assert!(stake_info.amount >= amount, "Insufficient staked amount");
+        assert!(amount > NearToken::from_yoctonear(0), "Unstake amount must be positive");
         
         // Claim pending rewards
         self.internal_claim_rewards(&staker, &mut stake_info);
         
-        // Update stake
-        stake_info.amount = NearToken::from_yoctonear(stake_info.amount.as_yoctonear() - amount.as_yoctonear());
-        self.total_staked = NearToken::from_yoctonear(self.total_staked.as_yoctonear() - amount.as_yoctonear());
+        // Update stake using safe subtraction
+        stake_info.amount = Self::safe_sub_tokens(stake_info.amount, amount)
+            .expect("Stake subtraction underflow");
+        self.total_staked = Self::safe_sub_tokens(self.total_staked, amount)
+            .expect("Total stake subtraction underflow");
         
-        if stake_info.amount.as_yoctonear() == 0 {
+        if stake_info.amount == NearToken::from_yoctonear(0) {
             self.stakes.remove(&staker);
         } else {
             self.stakes.insert(&staker, &stake_info);
@@ -105,11 +150,23 @@ impl StakingContract {
         let time_diff = current_time - stake_info.last_reward_claim;
         let time_diff_seconds = time_diff / 1_000_000_000;
         
-        let rewards = (stake_info.amount.as_yoctonear() * self.reward_rate * time_diff_seconds as u128) / 1_000_000_000_000_000_000_000_000;
+        let rewards = Self::calculate_rewards_safe(stake_info.amount, self.reward_rate, time_diff_seconds);
         
         if rewards > 0 {
-            stake_info.last_reward_claim = current_time;
-            Promise::new(staker.clone()).transfer(NearToken::from_yoctonear(rewards));
+            let reward_amount = NearToken::from_yoctonear(rewards);
+            
+            // Check if contract has sufficient balance to pay rewards
+            // Reserve 1 NEAR for contract operations
+            let contract_balance = env::account_balance();
+            let reserved_balance = NearToken::from_near(1);
+            
+            if contract_balance > Self::safe_add_tokens(reward_amount, reserved_balance).unwrap_or(contract_balance) {
+                stake_info.last_reward_claim = current_time;
+                Promise::new(staker.clone()).transfer(reward_amount);
+                env::log_str(&format!("REWARD: Account {} claimed {} NEAR", staker, reward_amount));
+            } else {
+                env::log_str(&format!("REWARD_FAILED: Insufficient contract balance for {}", staker));
+            }
         }
     }
 
@@ -123,7 +180,8 @@ impl StakingContract {
             let time_diff = current_time - stake_info.last_reward_claim;
             let time_diff_seconds = time_diff / 1_000_000_000;
             
-            NearToken::from_yoctonear(((stake_info.amount.as_yoctonear() * self.reward_rate * time_diff_seconds as u128) / 1_000_000_000_000_000_000_000_000) as u128)
+            let rewards = Self::calculate_rewards_safe(stake_info.amount, self.reward_rate, time_diff_seconds);
+            NearToken::from_yoctonear(rewards)
         } else {
             NearToken::from_yoctonear(0)
         }
@@ -149,7 +207,9 @@ impl StakingContract {
 
     pub fn update_max_stake_amount(&mut self, new_max_amount: NearToken) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update max stake amount");
+        assert!(new_max_amount >= self.min_stake_amount, "Maximum stake amount cannot be less than minimum");
         self.max_stake_amount = new_max_amount;
+        env::log_str(&format!("MAX_STAKE_UPDATED: New maximum stake amount is {} NEAR", new_max_amount));
     }
 }
 
