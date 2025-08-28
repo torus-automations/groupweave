@@ -7,7 +7,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import { Wallet, ChevronDown, Shield, LogOut, User } from "lucide-react";
 import { useWalletContext } from './wallet';
@@ -18,11 +17,10 @@ export interface NavigationItem {
 }
 
 interface NavigationProps {
-  className?: string;
   navItems?: NavigationItem[];
 }
 
-export const Navigation = ({ className, navItems = [] }: NavigationProps): React.ReactElement => {
+export const Navigation = ({ navItems = [] }: NavigationProps): React.ReactElement => {
   const { isConnected, accountId, isLoading, connect, disconnect } = useWalletContext();
 
   // Default navigation items if none provided

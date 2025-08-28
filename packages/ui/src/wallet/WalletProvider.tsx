@@ -32,7 +32,22 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children, config
 export const useWalletContext = (): WalletContextType => {
   const context = useContext(WalletContext);
   if (context === undefined) {
-    throw new Error('useWalletContext must be used within a WalletProvider');
+    // Return default context when no provider is available (e.g., during SSR)
+    return {
+      isConnected: false,
+      accountId: null,
+      isLoading: false,
+      connect: async () => {
+        console.warn('Wallet connect called outside of WalletProvider');
+      },
+      disconnect: async () => {
+        console.warn('Wallet disconnect called outside of WalletProvider');
+      },
+      initialize: async () => {
+        console.warn('Wallet initialize called outside of WalletProvider');
+      },
+      isInitialized: false,
+    };
   }
   return context;
 };

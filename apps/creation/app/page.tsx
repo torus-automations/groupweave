@@ -1,18 +1,16 @@
 'use client';
 
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Label } from '@repo/ui/label';
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
+// import { Button } from '@repo/ui';
 import type { CreateRoundRequest, Round } from '@groupweave/common-types';
 
-export default function Home(): JSX.Element {
+export default function Home(): React.JSX.Element {
   const [criteria, setCriteria] = useState('');
   const [image1, setImage1] = useState<File | null>(null);
   const [image2, setImage2] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  
+
   const criteriaRef = useRef<HTMLInputElement>(null);
   const image1Ref = useRef<HTMLInputElement>(null);
   const image2Ref = useRef<HTMLInputElement>(null);
@@ -21,7 +19,19 @@ export default function Home(): JSX.Element {
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === 'string') {
+          const base64 = result.split(',')[1];
+          if (base64) {
+            resolve(base64);
+          } else {
+            reject(new Error('Invalid file format'));
+          }
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
       reader.onerror = (error) => reject(error);
     });
 
@@ -84,8 +94,8 @@ export default function Home(): JSX.Element {
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Create a new Round</h1>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
-          <Label htmlFor="criteria">Criteria</Label>
-          <Input
+          <label htmlFor="criteria" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Criteria</label>
+          <input
             ref={criteriaRef}
             id="criteria"
             type="text"
@@ -93,33 +103,48 @@ export default function Home(): JSX.Element {
             value={criteria}
             onChange={(e) => setCriteria(e.target.value)}
             disabled={isSubmitting}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
           />
         </div>
         <div style={{ marginBottom: '15px' }}>
-          <Label htmlFor="image1">Image 1</Label>
-          <Input
+          <label htmlFor="image1" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Image 1</label>
+          <input
             ref={image1Ref}
             id="image1"
             type="file"
             accept="image/*"
-            onChange={(e) => setImage1(e.target.files ? e.target.files[0] : null)}
+            onChange={(e) => setImage1(e.target.files?.[0] || null)}
             disabled={isSubmitting}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
           />
         </div>
         <div style={{ marginBottom: '15px' }}>
-          <Label htmlFor="image2">Image 2</Label>
-          <Input
+          <label htmlFor="image2" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Image 2</label>
+          <input
             ref={image2Ref}
             id="image2"
             type="file"
             accept="image/*"
-            onChange={(e) => setImage2(e.target.files ? e.target.files[0] : null)}
+            onChange={(e) => setImage2(e.target.files?.[0] || null)}
             disabled={isSubmitting}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
           />
         </div>
-        <Button appName="creation" type="submit" disabled={isSubmitting}>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            opacity: isSubmitting ? 0.6 : 1
+          }}
+        >
           {isSubmitting ? 'Creating...' : 'Create Round'}
-        </Button>
+        </button>
       </form>
       {message && <p style={{ marginTop: '20px', textAlign: 'center' }}>{message}</p>}
     </div>
