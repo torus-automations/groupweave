@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="min-h-screen flex flex-col" style={{backgroundColor: 'hsl(var(--background))'}}>
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(var(--background))' }}>
           <NavigationClient />
           <main className="flex-1 flex flex-col" role="main">
             {children}
