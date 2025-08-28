@@ -255,3 +255,6 @@ export interface StakingEvent extends AppEvent {
     poolId?: string;
   };
 }
+
+// Export Round types from rounds.ts
+export * from './rounds.js';
