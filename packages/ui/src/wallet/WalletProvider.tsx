@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useWallet, UseWalletReturn } from './useWallet';
 import { WalletConfig } from './WalletService';
 
-interface WalletContextType extends UseWalletReturn {}
+interface WalletContextType extends UseWalletReturn { }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
@@ -17,9 +17,13 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children, config
   const wallet = useWallet();
 
   useEffect(() => {
-    if (!wallet.isInitialized) {
-      wallet.initialize(config);
-    }
+    const initializeWallet = async () => {
+      if (!wallet.isInitialized) {
+        await wallet.initialize(config);
+      }
+    };
+
+    initializeWallet();
   }, [config, wallet]);
 
   return (
