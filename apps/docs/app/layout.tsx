@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { ExpandableButton } from "@repo/ui/ui/expandable-button";
 import { Footer } from "@repo/ui/footer";
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <ExpandableButton />
         </div>
       </body>
     </html>
