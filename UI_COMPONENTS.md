@@ -28,7 +28,7 @@ Create a new file for your component inside the `packages/ui/src/ui/` directory.
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@/lib/utils" // Assuming a 'cn' utility for merging class names
+import { cn } from "@/lib/utils" // Ensure a 'cn' utility exists in packages/ui/src/lib/utils.ts (see note below)
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
