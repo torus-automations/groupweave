@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Footer } from "@repo/ui/footer";
 import NavigationClient from "../components/NavigationClient";
 import "../styles/globals.css";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col" role="main">
             {children}
           </main>
+          <Footer />
         </div>
       </body>
     </html>

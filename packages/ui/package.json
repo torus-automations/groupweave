@@ -15,6 +15,7 @@
     "./dialog": "./dist/ui/dialog.js",
     "./form": "./dist/ui/form.js",
     "./navigation": "./dist/Navigation.js",
+    "./footer": "./dist/Footer.js",
     "./ui/*": "./dist/ui/*.js",
     "./hooks/*": "./dist/hooks/*.js",
     "./lib/*": "./dist/lib/*.js"
