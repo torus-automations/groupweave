@@ -45,6 +45,8 @@ A detailed breakdown of all workspaces can be found in the **[AGENTS.md](./AGENT
 
 We welcome contributions! Please fork the repository, create a branch, and make your changes. Once your feature or fix is ready, please make a pull request for review.
 
+For details on how to work with the shared UI component library, please see our **[UI Component Guide](./UI_COMPONENTS.md)**.
+
 ## Automated Documentation
 
 This repository uses a script to generate key documentation files (`AGENTS.md`, `CLAUDE.md`, etc.) from a single source of truth: `docs.json`.
