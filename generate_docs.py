@@ -52,9 +52,10 @@ def generate_copilot_instructions(data):
     content += "This file serves as the single source of truth for repository setup, development workflows, and coding standards."
     return content
 
+import sys
+
 def main():
     """Main function to generate all documentation files."""
-    with open('docs.json', 'r') as f:
     try:
         with open('docs.json', 'r') as f:
             data = json.load(f)

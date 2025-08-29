@@ -1,41 +1,69 @@
 # GroupWeave
 
-AI content generation is advancing at an incredible pace, leading to a significant shift in content creation and consumption.
-
 GroupWeave is the open-source infrastructure for user-owned AI, designed to enable co-creation and co-immersion in generative AI content. Currently developing on NEAR, with plans to integrate Shade agents as customizable, semi-autonomous assistants for multimodal content understanding, moderation, and curation.
+
+## Getting Started
+
+To get started with GroupWeave development, you'll need to have Node.js, pnpm, Rust, and Python installed. Once you have the prerequisites, follow the steps below.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/torus-automations/groupweave.git
+    cd groupweave
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
+
+3.  **Build all packages:**
+    ```bash
+    pnpm build
+    ```
+
+4.  **Run an application:**
+    To run a specific application, use the `pnpm --filter <app-name> dev` command. For example, to run the `creation` app:
+    ```bash
+    pnpm --filter creation dev
+    ```
+
+For more detailed instructions on the development environment, commands, and project structure, please refer to our comprehensive developer and agent guide:
+
+**[📜 AGENTS.md](./AGENTS.md)**
+
+## Project Structure
+
+This project is a monorepo managed with Turborepo and pnpm workspaces.
+
+-   `apps/`: Contains the applications, including Next.js frontends, a React Native mobile app, a Python API, and Rust-based agents.
+-   `packages/`: Contains shared packages used by the applications, such as UI components, common types, and configs.
+
+A detailed breakdown of all workspaces can be found in the **[AGENTS.md](./AGENTS.md)** file.
 
 ## Developer Contributions
 
-Please fork the repository, then create a branch and make the changes you wish to propose. Once the feature or fix is successfully implemented, resolve any conflicts with main locally. Finally, make a pull request and submit for review. Code contributions have to be approved by the maintainer(s), one at this time, and two when the project has grown. 
+We welcome contributions! Please fork the repository, create a branch, and make your changes. Once your feature or fix is ready, please make a pull request for review.
 
-## How to use
+## Automated Documentation
 
-Do not deploy any of the apps or smart contracts yet. The standards for merging will increase in a week. Please check back later in August.
+This repository uses a script to generate key documentation files (`AGENTS.md`, `CLAUDE.md`, etc.) from a single source of truth: `docs.json`.
 
-This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup.
+If you make changes that require documentation updates (e.g., adding a new workspace), please:
+1.  Update the `docs.json` file.
+2.  Run the generation script: `python generate_docs.py`.
+3.  Commit the changes to `docs.json` and the generated files.
+
+## Roadmap
+
+The following features are currently being developed:
+
+*   Betting as a mechanism for content curation/moderation with reward and punishment.
+*   User-owned AI and personalization with confidential AI models and trusted execution environments.
+*   Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP).
 
 ## Connect with us
 [![Website](https://readmecodegen.vercel.app/api/social-icon?name=Link)](https://www.torus-automations.xyz/)
 [![Discord](https://readmecodegen.vercel.app/api/social-icon?name=Discord)](https://discord.gg/wgN9HhUM)
 [![Telegram](https://readmecodegen.vercel.app/api/social-icon?name=Telegram)](https://t.me/torusautomations)
 [![LinkedIn](https://readmecodegen.vercel.app/api/social-icon?name=LinkedIn)](https://www.linkedin.com/in/company/torus-automations/)
-
-## Automated Documentation
-
-To ensure consistency across the various documentation files (`AGENTS.md`, `CLAUDE.md`, etc.), this repository uses a script to generate them from a single source of truth (`docs.json`).
-
-When you make changes to the repository that require documentation updates (e.g., adding a new workspace, changing build commands), you should:
-1.  Update the `docs.json` file with the new information.
-2.  Run the generation script to update the documentation files:
-    ```bash
-    python generate_docs.py
-    ```
-3.  Commit the changes to `docs.json` and the generated documentation files.
-
-## Roadmap
-
-The following features are currently being developed:
-
-*   Betting as a mechanism for content curation/moderation with reward and punishment 
-*   User-owned AI and personalization with confidential AI models and trusted execution environments
-*   To be decided: Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP)

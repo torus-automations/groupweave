@@ -1,14 +1,15 @@
 {
   "projectName": "GroupWeave",
-  "projectDescription": "An open-source platform for user-owned AI, focusing on co-creation and co-immersion in generative content.",
+  "projectDescription": "GroupWeave is the open-source infrastructure for user-owned AI, designed to enable co-creation and co-immersion in generative AI content. Currently developing on NEAR, with plans to integrate Shade agents as customizable, semi-autonomous assistants for multimodal content understanding, moderation, and curation.",
+  "agentsIntroduction": "This document provides comprehensive instructions for developers and AI agents working on this monorepo. It is the single source of truth for repository setup, development workflows, and coding standards. Please read it carefully before contributing.",
   "tooling": [
     {
       "name": "pnpm",
-      "description": "Used for package management. All npm/yarn commands should be replaced with pnpm."
+      "description": "Used for high-performance package management. All npm/yarn commands should be replaced with pnpm."
     },
     {
       "name": "Turborepo",
-      "description": "Used to manage tasks and build pipelines across the monorepo."
+      "description": "Used to manage tasks and build pipelines across the monorepo, enabling faster builds and development."
     }
   ],
   "globalCommands": [
@@ -22,50 +23,78 @@
     },
     {
       "command": "pnpm dev",
-      "description": "Runs all applications in development mode."
+      "description": "Runs all applications in development mode. Use with --filter to run a specific app."
     },
     {
       "command": "pnpm lint",
       "description": "Lints all apps and packages."
+    },
+    {
+      "command": "pnpm check-types",
+      "description": "Runs TypeScript type checking across all relevant packages."
     }
   ],
   "workspaces": [
     {
-      "name": "apps/web",
-      "description": "The main GroupWeave web application (Next.js)."
+      "name": "apps/creation",
+      "description": "A Next.js application for creating new GroupWeave content."
+    },
+    {
+      "name": "apps/dashboard",
+      "description": "A Next.js application for users to view and manage their content and participation."
     },
     {
       "name": "apps/docs",
-      "description": "The documentation website (Next.js)."
+      "description": "A Next.js application for viewing project documentation."
+    },
+    {
+      "name": "apps/participation",
+      "description": "A Next.js application for participating in GroupWeave experiences and rounds."
     },
     {
       "name": "apps/mobile",
-      "description": "A React Native application built with Expo."
+      "description": "A React Native application for GroupWeave on mobile, built with Expo."
     },
     {
       "name": "apps/api",
-      "description": "A FastAPI backend."
+      "description": "A FastAPI backend providing the main API for GroupWeave services."
     },
     {
       "name": "apps/agents",
-      "description": "Contains multiple Rust-based AI agent binaries."
+      "description": "Contains multiple Rust-based AI agent binaries for various automated tasks."
     },
     {
       "name": "apps/contracts",
-      "description": "A workspace containing NEAR smart contracts."
+      "description": "A workspace containing NEAR smart contracts for on-chain logic, including staking and voting."
     },
     {
       "name": "packages/ui",
-      "description": "Shared React component library."
+      "description": "A shared React component library used across the frontend applications."
     },
     {
       "name": "packages/common-types",
-      "description": "Shared TypeScript types."
+      "description": "Shared TypeScript types and interfaces for consistency across the monorepo."
+    },
+    {
+      "name": "packages/near",
+      "description": "Shared utilities and configuration for interacting with the NEAR blockchain."
+    },
+    {
+      "name": "packages/eslint-config",
+      "description": "Shared ESLint configurations for maintaining code quality."
+    },
+    {
+      "name": "packages/tailwind-config",
+      "description": "Shared Tailwind CSS configuration for consistent styling."
+    },
+    {
+      "name": "packages/typescript-config",
+      "description": "Shared TypeScript configurations (tsconfig) for the monorepo."
     }
   ],
   "codingStyle": {
-    "javascript/typescript": "Formatted with Prettier, linted with ESLint. Follows a specific import order.",
-    "python": "Formatted with black and isort, linted with flake8 and mypy.",
-    "rust": "Formatted with rustfmt, linted with cargo clippy."
+    "javascript/typescript": "Formatted with Prettier, linted with ESLint. Follows a specific import order. See `packages/eslint-config`.",
+    "python": "Formatted with black and isort, linted with flake8 and mypy. Configuration is in the `apps/api` directory.",
+    "rust": "Formatted with rustfmt, linted with cargo clippy. Configuration is in the respective Cargo.toml files."
   }
 }
