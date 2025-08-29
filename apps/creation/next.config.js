@@ -58,7 +58,6 @@ const nextConfig = {
           process: 'process/browser',
         })
       );
-    }
 
 
 
