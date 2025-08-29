@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import React from "react";
-import { ExpandableButton } from "@repo/ui/ui/expandable-button";
+import { ExpandableButton } from "@repo/ui";
 import { Footer } from "@repo/ui/footer";
 import NavigationClient from "../components/NavigationClient";
 import "./globals.css";
