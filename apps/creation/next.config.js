@@ -29,11 +29,26 @@ const nextConfig = {
         process: 'process/browser',
       };
 
-      // Exclude problematic Node.js modules from client bundle
-      config.externals = config.externals || [];
+    }
+    
+    // Ignore Node.js specific modules and problematic packages in client bundles
+    // TODO: this is a temporary solution 
+    config.externals = config.externals || [];
+    if (!isServer) {
       config.externals.push({
+        'fs': 'commonjs fs',
+        'path': 'commonjs path',
+        'os': 'commonjs os',
         '@near-js/keystores-node': 'commonjs @near-js/keystores-node',
+        'near-api-js/lib/key_stores/unencrypted_file_system_keystore': 'commonjs near-api-js/lib/key_stores/unencrypted_file_system_keystore',
       });
+    }
+    
+    // Add module resolution aliases to avoid Node.js modules
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@near-js/keystores-node': false,
+    };
 
       // Add global polyfills
       config.plugins = config.plugins || [];
