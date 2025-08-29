@@ -19,7 +19,7 @@ const socialLinks = [
   },
   {
     name: "LinkedIn",
-    url: "https://www.linkedin.com/in/company/torus-automations/",
+    url: "https://www.linkedin.com/company/torus-automations/",
     icon: <Linkedin className="h-6 w-6" />,
   },
 ];
