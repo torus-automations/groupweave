@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@repo/ui/card';
-import { Button } from '@repo/ui/button';
+import { Card } from '@repo/ui';
 import type { Image, Round } from '@groupweave/common-types';
 
-export default function Home(): JSX.Element {
+export default function Home() {
   const [rounds, setRounds] = useState<Round[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,9 +38,13 @@ export default function Home(): JSX.Element {
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1>Rounds Dashboard</h1>
-        <Button appName="dashboard" onClick={fetchRounds} disabled={isLoading}>
+        <button 
+          onClick={fetchRounds} 
+          disabled={isLoading}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+        >
           {isLoading ? 'Refreshing...' : 'Refresh'}
-        </Button>
+        </button>
       </div>
 
       {isLoading && <p>Loading dashboard...</p>}
@@ -50,7 +53,7 @@ export default function Home(): JSX.Element {
       {!isLoading && !error && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
           {rounds.map((round) => (
-            <Card key={round.id} title={`Round #${round.id}`} href="#">
+            <Card key={round.id} title={`Round #${round.id}`} href="#" className="p-4 border rounded-lg shadow-sm">
               <div>
                 <p style={{ fontWeight: 'bold', marginBottom: '10px' }}>{round.criteria}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-around' }}>

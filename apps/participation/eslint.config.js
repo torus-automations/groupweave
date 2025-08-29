@@ -6,7 +6,7 @@ export default tseslint.config(...nextJsConfig, {
   ignores: [".next/", "dist/"],
   languageOptions: {
     parserOptions: {
-      project: "./tsconfig.eslint.json",
+      project: "./tsconfig.json",
     },
   },
 });
