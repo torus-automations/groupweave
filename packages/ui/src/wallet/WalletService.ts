@@ -5,7 +5,7 @@ import { setupArepaWallet } from "@near-wallet-selector/arepa-wallet";
 import { setupBitgetWallet } from "@near-wallet-selector/bitget-wallet";
 import { setupBitteWallet } from "@near-wallet-selector/bitte-wallet";
 import { setupCoin98Wallet } from "@near-wallet-selector/coin98-wallet";
-import { setupEthereumWallets } from "@near-wallet-selector/ethereum-wallets";
+// import { setupEthereumWallets } from "@near-wallet-selector/ethereum-wallets"; // Requires wagmiConfig
 import { setupHereWallet } from "@near-wallet-selector/here-wallet";
 import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
 import { setupIntearWallet } from "@near-wallet-selector/intear-wallet";
@@ -16,7 +16,8 @@ import { setupMeteorWalletApp } from "@near-wallet-selector/meteor-wallet-app";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupNarwallets } from "@near-wallet-selector/narwallets";
 import { setupNearMobileWallet } from "@near-wallet-selector/near-mobile-wallet";
-import { setupNearSnap } from "@near-wallet-selector/near-snap";
+// Dynamic import for near-snap to avoid Node.js dependency issues
+// import { setupNearSnap } from "@near-wallet-selector/near-snap";
 import { setupNightly } from "@near-wallet-selector/nightly";
 import { setupOKXWallet } from "@near-wallet-selector/okx-wallet";
 import { setupRamperWallet } from "@near-wallet-selector/ramper-wallet";
@@ -57,43 +58,55 @@ class WalletService {
     const metadata = config.dAppMetadata || defaultMetadata;
 
     try {
+      // Prepare wallet modules
+      const modules = [
+        setupArepaWallet(),
+        setupBitgetWallet(),
+        setupBitteWallet() as any, // Type compatibility issue with wallet selector
+        setupCoin98Wallet(),
+        // setupEthereumWallets requires wagmiConfig, skip for now
+        // setupEthereumWallets({
+        //   wagmiConfig: config.wagmiConfig,
+        // }),
+        setupHereWallet(),
+        setupHotWallet(),
+        setupIntearWallet(),
+        setupLedger(),
+        setupMathWallet(),
+        setupMeteorWallet(),
+        setupMeteorWalletApp({ contractId: config.contractId }),
+        setupMyNearWallet(),
+        setupNarwallets(),
+        setupNearMobileWallet(),
+        setupNightly(),
+        setupOKXWallet(),
+        setupRamperWallet(),
+        setupSender(),
+        ...(config.unityProjectId ? [setupUnityWallet({
+          projectId: config.unityProjectId,
+          metadata,
+        })] : []),
+        ...(config.walletConnectProjectId ? [setupWalletConnect({
+          projectId: config.walletConnectProjectId,
+          metadata,
+        })] : []),
+        setupWelldoneWallet(),
+        setupXDEFI(),
+      ];
+
+      // Try to add near-snap conditionally (only if it doesn't cause Node.js issues)
+      try {
+        if (typeof window !== 'undefined') {
+          const { setupNearSnap } = await import("@near-wallet-selector/near-snap");
+          modules.push(setupNearSnap());
+        }
+      } catch (error) {
+        console.warn("Near Snap wallet not available:", error);
+      }
+
       this.selector = await setupWalletSelector({
         network: config.network,
-        modules: [
-          setupArepaWallet(),
-          setupBitgetWallet(),
-          setupBitteWallet() as any, // Type compatibility issue with wallet selector
-          setupCoin98Wallet(),
-          // setupEthereumWallets requires wagmiConfig, skip for now
-          // setupEthereumWallets({
-          //   wagmiConfig: config.wagmiConfig,
-          // }),
-          setupHereWallet(),
-          setupHotWallet(),
-          setupIntearWallet(),
-          setupLedger(),
-          setupMathWallet(),
-          setupMeteorWallet(),
-          setupMeteorWalletApp({ contractId: config.contractId }),
-          setupMyNearWallet(),
-          setupNarwallets(),
-          setupNearMobileWallet(),
-          setupNearSnap(),
-          setupNightly(),
-          setupOKXWallet(),
-          setupRamperWallet(),
-          setupSender(),
-          ...(config.unityProjectId ? [setupUnityWallet({
-            projectId: config.unityProjectId,
-            metadata,
-          })] : []),
-          ...(config.walletConnectProjectId ? [setupWalletConnect({
-            projectId: config.walletConnectProjectId,
-            metadata,
-          })] : []),
-          setupWelldoneWallet(),
-          setupXDEFI(),
-        ],
+        modules,
       });
 
       this.modal = setupModal(this.selector, {
