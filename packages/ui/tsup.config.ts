@@ -7,6 +7,9 @@ export default defineConfig((options: Options) => ({
   dts: true,
   minify: true,
   external: ["react"],
+  banner: {
+    js: "'use client';",
+  },
   esbuildPlugins: [pathAlias({ alias: { "@": "./src" } })],
   ...options,
 }));
