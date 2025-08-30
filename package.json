@@ -23,5 +23,10 @@
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@near-js/keystores-node": "npm:@near-js/keystores-browser@latest"
+    }
   }
 }

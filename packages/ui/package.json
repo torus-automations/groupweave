@@ -43,7 +43,11 @@
     "eslint": "^9.31.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
-    "typescript": "5.8.2"
+    "typescript": "5.8.2",
+    "next": "15.4.2"
+  },
+  "peerDependencies": {
+    "next": "15.4.2"
   },
   "dependencies": {
     "@near-wallet-selector/arepa-wallet": "^9.4.0",
