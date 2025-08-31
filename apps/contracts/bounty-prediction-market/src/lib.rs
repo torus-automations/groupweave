@@ -143,6 +143,7 @@ pub struct BountyPredictionContract {
     // New bounty fields
     bounties: LookupMap<u64, Bounty>,
     participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
+    bounty_participants: LookupMap<u64, Vec<AccountId>>, // Efficient participant tracking
     next_bounty_id: u64,
     platform_fee_rate: u128, // 5% = 500 (basis points)
     is_paused: bool, // Emergency pause functionality
@@ -185,6 +186,7 @@ impl BountyPredictionContract {
             owner: env::predecessor_account_id(),
             bounties: LookupMap::new(b"b"),
             participant_stakes: LookupMap::new(b"p"),
+            bounty_participants: LookupMap::new(b"t"), // Participant tracking
             next_bounty_id: 1,
             platform_fee_rate: 500, // 5%
             is_paused: false,
@@ -463,6 +465,7 @@ impl BountyPredictionContract {
         assert!(amount <= bounty.max_stake_per_user, "Stake amount exceeds maximum allowed for this bounty");
         
         let stake_key = (staker.clone(), bounty_id);
+        let is_new_participant = !self.participant_stakes.contains_key(&stake_key);
         
         // Handle existing stake
         if let Some(existing_stake) = self.participant_stakes.get(&stake_key) {
@@ -472,6 +475,15 @@ impl BountyPredictionContract {
             bounty.stakes_per_option[existing_stake.option_index as usize] = 
                 Self::safe_sub_tokens(bounty.stakes_per_option[existing_stake.option_index as usize], existing_stake.amount)
                     .expect("Option stake subtraction underflow");
+        }
+        
+        // Add participant to tracking list if they're new
+        if is_new_participant {
+            let mut participants = self.bounty_participants.get(&bounty_id).unwrap_or_else(Vec::new);
+            if !participants.contains(&staker) {
+                participants.push(staker.clone());
+                self.bounty_participants.insert(&bounty_id, &participants);
+            }
         }
         
         // Add new stake
@@ -520,6 +532,18 @@ impl BountyPredictionContract {
         }
         
         user_stakes
+    }
+
+    pub fn get_bounty_participants(&self, bounty_id: u64) -> Vec<AccountId> {
+        self.bounty_participants.get(&bounty_id).unwrap_or_else(Vec::new)
+    }
+
+    pub fn get_bounty_participant_count(&self, bounty_id: u64) -> u64 {
+        if let Some(participants) = self.bounty_participants.get(&bounty_id) {
+            participants.len() as u64
+        } else {
+            0
+        }
     }
 
     // Reward Calculation Logic
@@ -580,24 +604,12 @@ impl BountyPredictionContract {
     }
 
     fn count_bounty_participants(&self, bounty_id: u64) -> u64 {
-        // This is a simplified approach - in a real implementation, 
-        // we'd maintain a separate participant count or use a more efficient method
-        let mut count = 0;
-        
-        // Check if total staked is greater than 0 but only one option has stakes
-        if let Some(bounty) = self.bounties.get(&bounty_id) {
-            let options_with_stakes = bounty.stakes_per_option.iter()
-                .filter(|&stake| *stake > NearToken::from_yoctonear(0))
-                .count();
-            
-            if options_with_stakes <= 1 && bounty.total_staked > NearToken::from_yoctonear(0) {
-                count = 1; // Assume single participant if only one option has stakes
-            } else if options_with_stakes > 1 {
-                count = 2; // Multiple participants (simplified)
-            }
+        // Use participant tracking system for accurate count
+        if let Some(participants) = self.bounty_participants.get(&bounty_id) {
+            participants.len() as u64
+        } else {
+            0
         }
-        
-        count
     }
 
     // Bounty Closure and Reward Distribution
@@ -647,27 +659,20 @@ impl BountyPredictionContract {
     }
 
     fn distribute_single_participant_rewards(&mut self, bounty: &mut Bounty) {
-        // Find the single participant and return their full stake
-        for i in 1..self.next_bounty_id {
-            if i == bounty.id {
-                // This is a simplified search - in production, we'd use a more efficient method
-                let test_accounts = vec![
-                    "alice.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-                    "bob.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-                    "charlie.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-                ];
-                
-                for account in test_accounts {
-                    let stake_key = (account.clone(), bounty.id);
-                    if let Some(stake) = self.participant_stakes.get(&stake_key) {
-                        // Return full stake to participant
-                        Promise::new(account.clone()).transfer(stake.amount);
-                        env::log_str(&format!("SINGLE_PARTICIPANT_REFUND: {} received {} NEAR", 
-                                             account, stake.amount));
-                        return;
-                    }
+        // Use participant tracking system to find the single participant
+        if let Some(participants) = self.bounty_participants.get(&bounty.id) {
+            for account in participants {
+                let stake_key = (account.clone(), bounty.id);
+                if let Some(stake) = self.participant_stakes.get(&stake_key) {
+                    // Return full stake to participant
+                    Promise::new(account.clone()).transfer(stake.amount);
+                    env::log_str(&format!("SINGLE_PARTICIPANT_REFUND: {} received {} NEAR", 
+                                         account, stake.amount));
+                    return;
                 }
             }
+        } else {
+            env::log_str(&format!("SINGLE_PARTICIPANT_ERROR: No participants found for bounty {}", bounty.id));
         }
     }
 
@@ -695,27 +700,24 @@ impl BountyPredictionContract {
     }
 
     fn distribute_winner_rewards(&mut self, bounty: &Bounty, winning_option: u64) {
-        // This is a simplified distribution - in production, we'd use a more efficient method
-        // to iterate through all participants
-        let test_accounts = vec![
-            "alice.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-            "bob.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-            "charlie.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-        ];
-        
-        for account in test_accounts {
-            let stake_key = (account.clone(), bounty.id);
-            if let Some(stake) = self.participant_stakes.get(&stake_key) {
-                if stake.option_index == winning_option {
-                    // Calculate and transfer reward
-                    let reward = self.calculate_user_reward(bounty, stake.amount, winning_option);
-                    if reward > NearToken::from_yoctonear(0) {
-                        Promise::new(account.clone()).transfer(reward);
-                        env::log_str(&format!("WINNER_REWARD: {} received {} NEAR for winning option {}", 
-                                             account, reward, winning_option));
+        // Use participant tracking system to iterate through all participants
+        if let Some(participants) = self.bounty_participants.get(&bounty.id) {
+            for account in participants {
+                let stake_key = (account.clone(), bounty.id);
+                if let Some(stake) = self.participant_stakes.get(&stake_key) {
+                    if stake.option_index == winning_option {
+                        // Calculate and transfer reward
+                        let reward = self.calculate_user_reward(bounty, stake.amount, winning_option);
+                        if reward > NearToken::from_yoctonear(0) {
+                            Promise::new(account.clone()).transfer(reward);
+                            env::log_str(&format!("WINNER_REWARD: {} received {} NEAR for winning option {}", 
+                                                 account, reward, winning_option));
+                        }
                     }
                 }
             }
+        } else {
+            env::log_str(&format!("WINNER_REWARD_ERROR: No participants found for bounty {}", bounty.id));
         }
     }
 
@@ -879,19 +881,17 @@ impl BountyPredictionContract {
     }
 
     fn emergency_refund_participants(&mut self, bounty: &Bounty) {
-        // Simplified refund logic - in production, we'd use a more efficient method
-        let test_accounts = vec![
-            "alice.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-            "bob.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-            "charlie.testnet".parse().unwrap_or_else(|_| env::current_account_id()),
-        ];
-        
-        for account in test_accounts {
-            let stake_key = (account.clone(), bounty.id);
-            if let Some(stake) = self.participant_stakes.get(&stake_key) {
-                Promise::new(account.clone()).transfer(stake.amount);
-                env::log_str(&format!("EMERGENCY_REFUND: {} refunded {} NEAR", account, stake.amount));
+        // Use participant tracking system to iterate through actual participants
+        if let Some(participants) = self.bounty_participants.get(&bounty.id) {
+            for account in participants {
+                let stake_key = (account.clone(), bounty.id);
+                if let Some(stake) = self.participant_stakes.get(&stake_key) {
+                    Promise::new(account.clone()).transfer(stake.amount);
+                    env::log_str(&format!("EMERGENCY_REFUND: {} refunded {} NEAR", account, stake.amount));
+                }
             }
+        } else {
+            env::log_str(&format!("EMERGENCY_REFUND: No participants found for bounty {}", bounty.id));
         }
     }
 
@@ -1900,5 +1900,161 @@ mod tests {
         // Try to update as non-owner
         testing_env!(context.predecessor_account_id(accounts(1)).build());
         contract.update_reward_rate(200);
+    }
+
+    #[test]
+    fn test_participant_tracking_single_participant() {
+        let mut context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
+
+        // Create a bounty
+        let bounty_id = contract.create_bounty(
+            "Test Bounty".to_string(),
+            "Test Description".to_string(),
+            vec!["Option A".to_string(), "Option B".to_string()],
+            NearToken::from_near(10),
+            100,
+        );
+
+        // Stake on the bounty
+        let stake_amount = NearToken::from_near(5);
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 0);
+
+        // Check participant tracking
+        let participants = contract.get_bounty_participants(bounty_id);
+        assert_eq!(participants.len(), 1);
+        assert_eq!(participants[0], accounts(1));
+
+        let participant_count = contract.get_bounty_participant_count(bounty_id);
+        assert_eq!(participant_count, 1);
+    }
+
+    #[test]
+    fn test_participant_tracking_multiple_participants() {
+        let mut context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
+
+        // Create a bounty
+        let bounty_id = contract.create_bounty(
+            "Test Bounty".to_string(),
+            "Test Description".to_string(),
+            vec!["Option A".to_string(), "Option B".to_string()],
+            NearToken::from_near(10),
+            100,
+        );
+
+        // Multiple participants stake
+        let stake_amount = NearToken::from_near(5);
+        
+        // Participant 1
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 0);
+
+        // Participant 2
+        testing_env!(context.predecessor_account_id(accounts(2)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 1);
+
+        // Participant 3
+        testing_env!(context.predecessor_account_id(accounts(3)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 0);
+
+        // Check participant tracking
+        let participants = contract.get_bounty_participants(bounty_id);
+        assert_eq!(participants.len(), 3);
+        assert!(participants.contains(&accounts(1)));
+        assert!(participants.contains(&accounts(2)));
+        assert!(participants.contains(&accounts(3)));
+
+        let participant_count = contract.get_bounty_participant_count(bounty_id);
+        assert_eq!(participant_count, 3);
+    }
+
+    #[test]
+    fn test_participant_tracking_no_duplicates() {
+        let mut context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
+
+        // Create a bounty
+        let bounty_id = contract.create_bounty(
+            "Test Bounty".to_string(),
+            "Test Description".to_string(),
+            vec!["Option A".to_string(), "Option B".to_string()],
+            NearToken::from_near(10),
+            100,
+        );
+
+        // Participant stakes multiple times
+        let stake_amount = NearToken::from_near(2);
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 0);
+
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 0);
+
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id, 1);
+
+        // Should only have one participant entry
+        let participants = contract.get_bounty_participants(bounty_id);
+        assert_eq!(participants.len(), 1);
+        assert_eq!(participants[0], accounts(1));
+
+        let participant_count = contract.get_bounty_participant_count(bounty_id);
+        assert_eq!(participant_count, 1);
+    }
+
+    #[test]
+    fn test_participant_tracking_across_multiple_bounties() {
+        let mut context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
+
+        // Create two bounties
+        let bounty_id_1 = contract.create_bounty(
+            "Test Bounty 1".to_string(),
+            "Test Description 1".to_string(),
+            vec!["Option A".to_string(), "Option B".to_string()],
+            NearToken::from_near(10),
+            100,
+        );
+
+        let bounty_id_2 = contract.create_bounty(
+            "Test Bounty 2".to_string(),
+            "Test Description 2".to_string(),
+            vec!["Option X".to_string(), "Option Y".to_string()],
+            NearToken::from_near(10),
+            100,
+        );
+
+        let stake_amount = NearToken::from_near(5);
+
+        // Participant 1 stakes on both bounties
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id_1, 0);
+
+        testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id_2, 1);
+
+        // Participant 2 stakes only on bounty 1
+        testing_env!(context.predecessor_account_id(accounts(2)).attached_deposit(stake_amount).build());
+        contract.stake_on_option(bounty_id_1, 1);
+
+        // Check participant tracking for each bounty
+        let participants_1 = contract.get_bounty_participants(bounty_id_1);
+        assert_eq!(participants_1.len(), 2);
+        assert!(participants_1.contains(&accounts(1)));
+        assert!(participants_1.contains(&accounts(2)));
+
+        let participants_2 = contract.get_bounty_participants(bounty_id_2);
+        assert_eq!(participants_2.len(), 1);
+        assert!(participants_2.contains(&accounts(1)));
+
+        // Check participant counts
+        assert_eq!(contract.get_bounty_participant_count(bounty_id_1), 2);
+        assert_eq!(contract.get_bounty_participant_count(bounty_id_2), 1);
     }
 }
