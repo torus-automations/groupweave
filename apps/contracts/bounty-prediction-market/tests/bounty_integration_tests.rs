@@ -10,7 +10,7 @@ async fn test_complete_bounty_lifecycle() -> Result<(), Box<dyn std::error::Erro
     // Initialize the contract
     let reward_rate = 100u128;
     let min_stake = NearToken::from_near(1);
-    let max_stake = NearToken::from_near(1000);
+    let max_stake = NearToken::from_near(10000);
     
     let init_outcome = contract
         .call("new")
@@ -351,7 +351,7 @@ async fn test_single_participant_bounty() -> Result<(), Box<dyn std::error::Erro
         .args_json(json!({
             "reward_rate": 100u128,
             "min_stake_amount": NearToken::from_near(1).as_yoctonear().to_string(),
-            "max_stake_amount": NearToken::from_near(1000).as_yoctonear().to_string()
+            "max_stake_amount": NearToken::from_near(10000).as_yoctonear().to_string()
         }))
         .transact()
         .await?;
@@ -416,7 +416,7 @@ async fn test_emergency_functions() -> Result<(), Box<dyn std::error::Error>> {
         .args_json(json!({
             "reward_rate": 100u128,
             "min_stake_amount": NearToken::from_near(1).as_yoctonear().to_string(),
-            "max_stake_amount": NearToken::from_near(1000).as_yoctonear().to_string()
+            "max_stake_amount": NearToken::from_near(10000).as_yoctonear().to_string()
         }))
         .transact()
         .await?;

@@ -355,11 +355,11 @@ impl BountyPredictionContract {
             assert!(option.len() <= 100, "Option {} too long (max 100 characters)", i);
         }
         
-        // Validate max stake amount (0.1 to 1000 NEAR)
+        // Validate max stake amount (0.1 to 10000 NEAR)
         let min_bounty_stake = NearToken::from_millinear(100); // 0.1 NEAR
-        let max_bounty_stake = NearToken::from_near(1000);
+        let max_bounty_stake = NearToken::from_near(10000);
         assert!(max_stake_per_user >= min_bounty_stake, "Maximum stake per user must be at least 0.1 NEAR");
-        assert!(max_stake_per_user <= max_bounty_stake, "Maximum stake per user cannot exceed 1000 NEAR");
+        assert!(max_stake_per_user <= max_bounty_stake, "Maximum stake per user cannot exceed 10000 NEAR");
         
         // Validate duration
         assert!(duration_blocks > 0, "Duration must be greater than 0 blocks");
@@ -580,10 +580,10 @@ impl BountyPredictionContract {
         
         let mut bounty = self.bounties.get(&bounty_id).expect("Bounty not found");
         
-        // Authorization check
+        // Authorization check - only contract owner (deployer) can close bounties
         assert!(
-            caller == bounty.creator || caller == self.owner,
-            "Only bounty creator or contract owner can close bounty"
+            caller == self.owner,
+            "Only contract owner can close bounty"
         );
         
         // State validation
@@ -982,7 +982,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Maximum stake per user cannot exceed 1000 NEAR")]
+    #[should_panic(expected = "Maximum stake per user cannot exceed 10000 NEAR")]
     fn test_create_bounty_stake_too_high() {
         let context = get_context(accounts(0), NearToken::from_near(0));
         testing_env!(context.build());
@@ -992,7 +992,7 @@ mod tests {
             "Test Bounty".to_string(),
             "A test bounty".to_string(),
             vec!["Option A".to_string(), "Option B".to_string()],
-            NearToken::from_near(1001), // Above maximum
+            NearToken::from_near(10001), // Above maximum
             100,
         );
     }
@@ -1266,7 +1266,10 @@ mod tests {
         // Platform fee (5%): 5 NEAR
         // Prize pool: 95 NEAR
         // User's share: (10 / 70) * 95 = 13.57 NEAR (approximately)
-        let expected_reward_yocto = (user_stake.as_yoctonear() * (NearToken::from_near(95).as_yoctonear())) / NearToken::from_near(70).as_yoctonear();
+        let expected_reward_yocto = user_stake.as_yoctonear()
+            .checked_mul(NearToken::from_near(95).as_yoctonear())
+            .and_then(|x| x.checked_div(NearToken::from_near(70).as_yoctonear()))
+            .unwrap_or(0);
         
         assert_eq!(reward.as_yoctonear(), expected_reward_yocto);
     }
@@ -1299,7 +1302,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Only bounty creator or contract owner can close bounty")]
+    #[should_panic(expected = "Only contract owner can close bounty")]
     fn test_close_bounty_unauthorized() {
         let mut context = get_context(accounts(0), NearToken::from_near(0));
         testing_env!(context.build());
@@ -1317,7 +1320,7 @@ mod tests {
         // Fast forward time
         testing_env!(context.block_timestamp(100 * 1_000_000_000 + 1).predecessor_account_id(accounts(1)).build());
 
-        // Try to close bounty as non-creator/non-owner
+        // Try to close bounty as non-owner (creators are just regular users)
         contract.close_bounty(bounty_id);
     }
 
