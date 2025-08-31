@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "voting",
     "bounty-prediction-market",
     "zkp-verifier"
 ]
