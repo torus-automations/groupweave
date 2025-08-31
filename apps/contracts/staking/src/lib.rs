@@ -1,6 +1,7 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
+use near_sdk::json_types::U128;
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, Promise, NearToken};
 use schemars::JsonSchema;
 
@@ -14,7 +15,8 @@ pub struct StakeInfo {
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 pub struct StakeInfoView {
-    pub amount: String,
+    #[schemars(with = "String")]
+    pub amount: U128,
     pub staked_at: u64,
     pub last_reward_claim: u64,
 }
@@ -22,7 +24,7 @@ pub struct StakeInfoView {
 impl From<StakeInfo> for StakeInfoView {
     fn from(stake_info: StakeInfo) -> Self {
         Self {
-            amount: stake_info.amount.to_string(),
+            amount: U128(stake_info.amount.as_yoctonear()),
             staked_at: stake_info.staked_at,
             last_reward_claim: stake_info.last_reward_claim,
         }
@@ -192,29 +194,29 @@ impl StakingContract {
         self.stakes.get(&account).map(|stake_info| stake_info.into())
     }
 
-    pub fn calculate_pending_rewards(&self, account: AccountId) -> String {
+    pub fn calculate_pending_rewards(&self, account: AccountId) -> U128 {
         if let Some(stake_info) = self.stakes.get(&account) {
             let current_time = env::block_timestamp();
             let time_diff = current_time - stake_info.last_reward_claim;
             let time_diff_seconds = time_diff / 1_000_000_000;
             
             let rewards = Self::calculate_rewards_safe(stake_info.amount, self.reward_rate, time_diff_seconds);
-            NearToken::from_yoctonear(rewards).to_string()
+            U128(rewards)
         } else {
-            NearToken::from_yoctonear(0).to_string()
+            U128(0)
         }
     }
 
-    pub fn get_total_staked(&self) -> String {
-        self.total_staked.to_string()
+    pub fn get_total_staked(&self) -> U128 {
+        U128(self.total_staked.as_yoctonear())
     }
 
     pub fn get_reward_rate(&self) -> u128 {
         self.reward_rate
     }
 
-    pub fn get_max_stake_amount(&self) -> String {
-        self.max_stake_amount.to_string()
+    pub fn get_max_stake_amount(&self) -> U128 {
+        U128(self.max_stake_amount.as_yoctonear())
     }
 
     // Owner functions
@@ -257,7 +259,7 @@ mod tests {
         let contract = StakingContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
         assert_eq!(contract.get_reward_rate(), REWARD_RATE);
         assert_eq!(contract.min_stake_amount, MIN_STAKE);
-        assert_eq!(contract.get_max_stake_amount(), MAX_STAKE.to_string());
+        assert_eq!(contract.get_max_stake_amount().0, MAX_STAKE.as_yoctonear());
     }
 
     #[test]
@@ -271,7 +273,7 @@ mod tests {
         contract.stake();
 
         let stake_info = contract.get_stake_info(accounts(1)).unwrap();
-        assert_eq!(stake_info.amount, stake_amount.to_string());
+        assert_eq!(stake_info.amount.0, stake_amount.as_yoctonear());
     }
 
     #[test]
@@ -306,6 +308,6 @@ mod tests {
 
         let new_max = NearToken::from_near(200);
         contract.update_max_stake_amount(new_max);
-        assert_eq!(contract.get_max_stake_amount(), new_max.to_string());
+        assert_eq!(contract.get_max_stake_amount().0, new_max.as_yoctonear());
     }
 }

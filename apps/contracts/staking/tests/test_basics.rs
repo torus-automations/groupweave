@@ -62,7 +62,7 @@ async fn test_contract_initialization(contract: &near_workspaces::Contract) -> R
         .args_json(json!({}))
         .await?;
     let total_staked: String = total_staked_outcome.json()?;
-    assert_eq!(total_staked, "0 NEAR", "Initial total staked should be 0 NEAR");
+    assert_eq!(total_staked, "0", "Initial total staked should be 0");
 
     // Test getting max stake amount
     let max_stake_outcome = contract
@@ -70,7 +70,7 @@ async fn test_contract_initialization(contract: &near_workspaces::Contract) -> R
         .args_json(json!({}))
         .await?;
     let max_stake: String = max_stake_outcome.json()?;
-    assert!(!max_stake.is_empty(), "Max stake amount should be set");
+    assert_ne!(max_stake, "0", "Max stake amount should be greater than 0");
 
     println!("✅ Contract initialization tests passed");
     Ok(())
@@ -105,7 +105,7 @@ async fn test_staking_flow(
         .args_json(json!({}))
         .await?;
     let total_staked: String = total_staked_outcome.json()?;
-    assert_ne!(total_staked, "0 NEAR", "Total staked should be greater than 0 NEAR");
+    assert_ne!(total_staked, "0", "Total staked should be greater than 0");
 
     println!("✅ Staking flow tests passed");
     Ok(())
