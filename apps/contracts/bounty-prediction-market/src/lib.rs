@@ -761,7 +761,11 @@ impl BountyPredictionContract {
                     } else {
                         env::log_str(&format!("CLAIM_FAILED: Insufficient contract balance for {} from bounty {}", 
                                              claimer, bounty_id));
-                        panic!("Insufficient contract balance for reward payment");
+                        panic!(
+                            "Insufficient contract balance for reward payment: contract balance = {} yoctoNEAR, required = {} yoctoNEAR",
+                            contract_balance.as_yoctonear(),
+                            Self::safe_add_tokens(reward, reserved_balance).unwrap_or(contract_balance).as_yoctonear()
+                        );
                     }
                 } else {
                     panic!("No reward to claim");
