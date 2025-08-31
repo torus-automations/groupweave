@@ -8,6 +8,13 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[tokio::test]
+async fn test_backward_compatibility() -> Result<(), Box<dyn std::error::Error>> {
+    let contract_wasm = &near_workspaces::compile_project("./").await?;
+    test_legacy_staking_functionality(contract_wasm).await?;
+    Ok(())
+}
+
 async fn test_basics_on(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
@@ -673,5 +680,162 @@ async fn test_max_stake_limits() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     println!("✅ Max stake limit tests completed");
+    Ok(())
+}
+
+async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+    let sandbox = near_workspaces::sandbox().await?;
+    let contract = sandbox.dev_deploy(contract_wasm).await?;
+    
+    // Initialize the contract (same as before)
+    let reward_rate = 100u128;
+    let min_stake = NearToken::from_near(1);
+    let max_stake = NearToken::from_near(1000);
+    
+    let init_outcome = contract
+        .call("new")
+        .args_json(json!({
+            "reward_rate": reward_rate,
+            "min_stake_amount": min_stake.as_yoctonear().to_string(),
+            "max_stake_amount": max_stake.as_yoctonear().to_string()
+        }))
+        .transact()
+        .await?;
+    
+    assert!(init_outcome.is_success(), "Contract initialization failed");
+
+    // Test that all legacy staking functions still work
+    test_legacy_staking_operations(&sandbox, &contract).await?;
+    test_bounty_and_staking_coexistence(&sandbox, &contract).await?;
+
+    println!("✅ Backward compatibility tests passed");
+    Ok(())
+}
+
+async fn test_legacy_staking_operations(
+    sandbox: &near_workspaces::Worker<near_workspaces::network::Sandbox>,
+    contract: &near_workspaces::Contract,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let user_account = sandbox.dev_create_account().await?;
+    
+    // Test legacy staking (should still work)
+    let stake_amount = NearToken::from_near(10);
+    let outcome = user_account
+        .call(contract.id(), "stake")
+        .deposit(stake_amount)
+        .transact()
+        .await?;
+    assert!(outcome.is_success(), "Legacy staking should still work");
+
+    // Verify stake info
+    let stake_info_outcome = contract
+        .view("get_stake_info")
+        .args_json(json!({"account": user_account.id()}))
+        .await?;
+    let stake_info: Option<serde_json::Value> = stake_info_outcome.json()?;
+    assert!(stake_info.is_some(), "Legacy stake info should be retrievable");
+    let stake_info = stake_info.unwrap();
+    assert_eq!(
+        stake_info["amount"].as_str().unwrap(), 
+        stake_amount.as_yoctonear().to_string(), 
+        "Legacy staked amount should match"
+    );
+
+    // Test legacy reward calculation
+    let rewards_outcome = contract
+        .view("calculate_pending_rewards")
+        .args_json(json!({"account": user_account.id()}))
+        .await?;
+    let rewards: String = rewards_outcome.json()?;
+    assert!(!rewards.is_empty(), "Legacy reward calculation should work");
+
+    // Test legacy unstaking
+    let unstake_amount = NearToken::from_near(3);
+    let unstake_outcome = user_account
+        .call(contract.id(), "unstake")
+        .args_json(json!({"amount": unstake_amount.as_yoctonear().to_string()}))
+        .transact()
+        .await?;
+    assert!(unstake_outcome.is_success(), "Legacy unstaking should work");
+
+    // Test legacy reward claiming
+    let claim_outcome = user_account
+        .call(contract.id(), "claim_rewards")
+        .transact()
+        .await?;
+    assert!(claim_outcome.is_success(), "Legacy reward claiming should work");
+
+    println!("✅ Legacy staking operations test passed");
+    Ok(())
+}
+
+async fn test_bounty_and_staking_coexistence(
+    sandbox: &near_workspaces::Worker<near_workspaces::network::Sandbox>,
+    contract: &near_workspaces::Contract,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let user_account = sandbox.dev_create_account().await?;
+    
+    // User can do both legacy staking and bounty participation
+    
+    // 1. Legacy staking
+    let legacy_stake = NearToken::from_near(5);
+    let legacy_outcome = user_account
+        .call(contract.id(), "stake")
+        .deposit(legacy_stake)
+        .transact()
+        .await?;
+    assert!(legacy_outcome.is_success(), "Legacy staking should work alongside bounties");
+
+    // 2. Create and participate in bounty
+    let bounty_id: u64 = contract
+        .call("create_bounty")
+        .args_json(json!({
+            "title": "Coexistence Test",
+            "description": "Testing bounty and staking coexistence",
+            "options": ["Option A", "Option B"],
+            "max_stake_per_user": NearToken::from_near(20).as_yoctonear().to_string(),
+            "duration_blocks": 100
+        }))
+        .transact()
+        .await?
+        .json()?;
+
+    let bounty_stake = NearToken::from_near(8);
+    let bounty_outcome = user_account
+        .call(contract.id(), "stake_on_option")
+        .args_json(json!({"bounty_id": bounty_id, "option_index": 0}))
+        .deposit(bounty_stake)
+        .transact()
+        .await?;
+    assert!(bounty_outcome.is_success(), "Bounty staking should work alongside legacy staking");
+
+    // 3. Verify both systems work independently
+    
+    // Check legacy stake
+    let legacy_stake_info = contract
+        .view("get_stake_info")
+        .args_json(json!({"account": user_account.id()}))
+        .await?
+        .json::<Option<serde_json::Value>>()?;
+    assert!(legacy_stake_info.is_some());
+    
+    // Check bounty stake
+    let bounty_stake_info = contract
+        .view("get_participant_stake")
+        .args_json(json!({"account": user_account.id(), "bounty_id": bounty_id}))
+        .await?
+        .json::<Option<serde_json::Value>>()?;
+    assert!(bounty_stake_info.is_some());
+
+    // 4. Verify total staked (legacy) is separate from bounty stakes
+    let total_staked_outcome = contract
+        .view("get_total_staked")
+        .args_json(json!({}))
+        .await?;
+    let total_staked: String = total_staked_outcome.json()?;
+    // This should only include legacy stakes, not bounty stakes
+    assert_eq!(total_staked, legacy_stake.as_yoctonear().to_string());
+
+    println!("✅ Bounty and staking coexistence test passed");
     Ok(())
 }
