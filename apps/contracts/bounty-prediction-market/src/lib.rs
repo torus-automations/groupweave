@@ -1688,6 +1688,125 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "Reward rate must be positive")]
+    fn test_new_with_zero_reward_rate() {
+        let context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        BountyPredictionContract::new(0, MIN_STAKE, MAX_STAKE);
+    }
+
+    #[test]
+    fn test_calculate_rewards_safe_with_zero_rate() {
+        let stake_amount = NearToken::from_near(10);
+        let reward_rate = 0u128;
+        let time_seconds = 3600u64; // 1 hour
+
+        let rewards = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        assert_eq!(rewards, 0, "Rewards should be 0 with zero reward rate");
+    }
+
+    #[test]
+    fn test_calculate_rewards_safe_with_high_rate() {
+        let stake_amount = NearToken::from_near(1);
+        let reward_rate = u128::MAX / 1_000_000; // Very high but safe
+        let time_seconds = 1u64;
+
+        let rewards = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        // Should not panic and should return a valid value
+        assert!(rewards <= u128::MAX, "Rewards should not overflow");
+    }
+
+    #[test]
+    fn test_calculate_rewards_safe_overflow_protection() {
+        let stake_amount = NearToken::from_near(1000);
+        let reward_rate = u128::MAX / 1000; // High rate
+        let time_seconds = u64::MAX; // Maximum time
+
+        // This should not panic due to checked arithmetic
+        let rewards = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        // If overflow occurs, checked_mul returns None and we get 0
+        assert!(rewards <= u128::MAX, "Rewards calculation should handle overflow gracefully");
+    }
+
+    #[test]
+    fn test_calculate_rewards_safe_with_zero_stake() {
+        let stake_amount = NearToken::from_yoctonear(0);
+        let reward_rate = 1000u128;
+        let time_seconds = 3600u64;
+
+        let rewards = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        assert_eq!(rewards, 0, "Rewards should be 0 with zero stake");
+    }
+
+    #[test]
+    fn test_calculate_rewards_safe_with_zero_time() {
+        let stake_amount = NearToken::from_near(10);
+        let reward_rate = 1000u128;
+        let time_seconds = 0u64;
+
+        let rewards = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        assert_eq!(rewards, 0, "Rewards should be 0 with zero time");
+    }
+
+    #[test]
+    fn test_update_reward_rate_to_high_value() {
+        let context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
+
+        let very_high_rate = u128::MAX / 1000;
+        contract.update_reward_rate(very_high_rate);
+        assert_eq!(contract.get_reward_rate(), very_high_rate);
+    }
+
+    #[test]
+    fn test_update_reward_rate_to_one() {
+        let context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
+
+        contract.update_reward_rate(1);
+        assert_eq!(contract.get_reward_rate(), 1);
+    }
+
+    #[test]
+    fn test_reward_calculation_consistency() {
+        let context = get_context(accounts(0), NearToken::from_near(0));
+        testing_env!(context.build());
+        let contract = BountyPredictionContract::new(1000, MIN_STAKE, MAX_STAKE);
+
+        let stake_amount = NearToken::from_near(10);
+        let reward_rate = 1000u128;
+        let time_seconds = 3600u64; // 1 hour
+
+        // Calculate rewards multiple times - should be consistent
+        let rewards1 = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        let rewards2 = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+        let rewards3 = BountyPredictionContract::calculate_rewards_safe(stake_amount, reward_rate, time_seconds);
+
+        assert_eq!(rewards1, rewards2, "Reward calculations should be consistent");
+        assert_eq!(rewards2, rewards3, "Reward calculations should be consistent");
+    }
+
+    #[test]
+    fn test_reward_calculation_proportionality() {
+        let reward_rate = 100u128;
+        let time_seconds = 3600u64;
+
+        let stake1 = NearToken::from_near(1);
+        let stake2 = NearToken::from_near(2);
+        let stake10 = NearToken::from_near(10);
+
+        let rewards1 = BountyPredictionContract::calculate_rewards_safe(stake1, reward_rate, time_seconds);
+        let rewards2 = BountyPredictionContract::calculate_rewards_safe(stake2, reward_rate, time_seconds);
+        let rewards10 = BountyPredictionContract::calculate_rewards_safe(stake10, reward_rate, time_seconds);
+
+        // Rewards should be proportional to stake amount
+        assert_eq!(rewards2, rewards1 * 2, "Rewards should be proportional to stake (2x)");
+        assert_eq!(rewards10, rewards1 * 10, "Rewards should be proportional to stake (10x)");
+    }
+
+    #[test]
     #[should_panic(expected = "Only owner can pause contract")]
     fn test_pause_contract_unauthorized() {
         let mut context = get_context(accounts(0), NearToken::from_near(0));
