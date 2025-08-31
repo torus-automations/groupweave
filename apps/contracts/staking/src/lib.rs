@@ -2,13 +2,31 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, Promise, NearToken};
+use schemars::JsonSchema;
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
-#[serde(crate = "near_sdk::serde")]
+#[derive(BorshDeserialize, BorshSerialize, Clone)]
 pub struct StakeInfo {
     pub amount: NearToken,
     pub staked_at: u64,
     pub last_reward_claim: u64,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+#[serde(crate = "near_sdk::serde")]
+pub struct StakeInfoView {
+    pub amount: String,
+    pub staked_at: u64,
+    pub last_reward_claim: u64,
+}
+
+impl From<StakeInfo> for StakeInfoView {
+    fn from(stake_info: StakeInfo) -> Self {
+        Self {
+            amount: stake_info.amount.to_string(),
+            staked_at: stake_info.staked_at,
+            last_reward_claim: stake_info.last_reward_claim,
+        }
+    }
 }
 
 #[near_bindgen]
@@ -170,33 +188,33 @@ impl StakingContract {
         }
     }
 
-    pub fn get_stake_info(&self, account: AccountId) -> Option<StakeInfo> {
-        self.stakes.get(&account)
+    pub fn get_stake_info(&self, account: AccountId) -> Option<StakeInfoView> {
+        self.stakes.get(&account).map(|stake_info| stake_info.into())
     }
 
-    pub fn calculate_pending_rewards(&self, account: AccountId) -> NearToken {
+    pub fn calculate_pending_rewards(&self, account: AccountId) -> String {
         if let Some(stake_info) = self.stakes.get(&account) {
             let current_time = env::block_timestamp();
             let time_diff = current_time - stake_info.last_reward_claim;
             let time_diff_seconds = time_diff / 1_000_000_000;
             
             let rewards = Self::calculate_rewards_safe(stake_info.amount, self.reward_rate, time_diff_seconds);
-            NearToken::from_yoctonear(rewards)
+            NearToken::from_yoctonear(rewards).to_string()
         } else {
-            NearToken::from_yoctonear(0)
+            NearToken::from_yoctonear(0).to_string()
         }
     }
 
-    pub fn get_total_staked(&self) -> NearToken {
-        self.total_staked
+    pub fn get_total_staked(&self) -> String {
+        self.total_staked.to_string()
     }
 
     pub fn get_reward_rate(&self) -> u128 {
         self.reward_rate
     }
 
-    pub fn get_max_stake_amount(&self) -> NearToken {
-        self.max_stake_amount
+    pub fn get_max_stake_amount(&self) -> String {
+        self.max_stake_amount.to_string()
     }
 
     // Owner functions
@@ -239,7 +257,7 @@ mod tests {
         let contract = StakingContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
         assert_eq!(contract.get_reward_rate(), REWARD_RATE);
         assert_eq!(contract.min_stake_amount, MIN_STAKE);
-        assert_eq!(contract.get_max_stake_amount(), MAX_STAKE);
+        assert_eq!(contract.get_max_stake_amount(), MAX_STAKE.to_string());
     }
 
     #[test]
@@ -253,7 +271,7 @@ mod tests {
         contract.stake();
 
         let stake_info = contract.get_stake_info(accounts(1)).unwrap();
-        assert_eq!(stake_info.amount, stake_amount);
+        assert_eq!(stake_info.amount, stake_amount.to_string());
     }
 
     #[test]
@@ -288,6 +306,6 @@ mod tests {
 
         let new_max = NearToken::from_near(200);
         contract.update_max_stake_amount(new_max);
-        assert_eq!(contract.get_max_stake_amount(), new_max);
+        assert_eq!(contract.get_max_stake_amount(), new_max.to_string());
     }
 }
