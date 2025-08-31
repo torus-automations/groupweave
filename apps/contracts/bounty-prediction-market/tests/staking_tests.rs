@@ -706,7 +706,21 @@ async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), B
 
     // Test that all legacy staking functions still work
     test_legacy_staking_operations(&sandbox, &contract).await?;
-    test_bounty_and_staking_coexistence(&sandbox, &contract).await?;
+    
+    // Test bounty and staking coexistence with a fresh contract to avoid state interference
+    let fresh_contract = sandbox.dev_deploy(contract_wasm).await?;
+    let fresh_init_outcome = fresh_contract
+        .call("new")
+        .args_json(json!({
+            "reward_rate": reward_rate,
+            "min_stake_amount": min_stake.as_yoctonear().to_string(),
+            "max_stake_amount": max_stake.as_yoctonear().to_string()
+        }))
+        .transact()
+        .await?;
+    assert!(fresh_init_outcome.is_success(), "Fresh contract initialization failed");
+    
+    test_bounty_and_staking_coexistence(&sandbox, &fresh_contract).await?;
 
     println!("✅ Backward compatibility tests passed");
     Ok(())

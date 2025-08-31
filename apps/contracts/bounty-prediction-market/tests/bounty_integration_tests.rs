@@ -45,7 +45,7 @@ async fn test_bounty_creation_and_staking(
             "description": "Predict the winner of the upcoming championship",
             "options": ["Team A", "Team B", "Team C"],
             "max_stake_per_user": NearToken::from_near(50).as_yoctonear().to_string(),
-            "duration_blocks": 1000
+            "duration_blocks": 10
         }))
         .transact()
         .await?;
@@ -78,7 +78,14 @@ async fn test_bounty_creation_and_staking(
         .deposit(NearToken::from_near(10))
         .transact()
         .await?;
-    assert!(stake1_outcome.is_success(), "User 1 staking failed");
+    let stake1_success = stake1_outcome.is_success();
+    if !stake1_success {
+        println!("User 1 staking failed with logs: {:?}", stake1_outcome.logs());
+        if let Err(failure) = stake1_outcome.into_result() {
+            println!("Failure details: {:?}", failure);
+        }
+    }
+    assert!(stake1_success, "User 1 staking failed");
 
     // User 2 stakes on option 1
     let stake2_outcome = user2
@@ -163,7 +170,8 @@ async fn test_bounty_closure_and_rewards(
         .await?;
 
     // Wait for bounty to expire (simulate time passage)
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    // In NEAR workspaces, we need to wait longer for blocks to be produced
+    tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
 
     // Close the bounty
     let close_outcome = contract
@@ -171,7 +179,16 @@ async fn test_bounty_closure_and_rewards(
         .args_json(json!({"bounty_id": bounty_id}))
         .transact()
         .await?;
-    assert!(close_outcome.is_success(), "Bounty closure failed");
+    
+    let is_success = close_outcome.is_success();
+    if !is_success {
+        println!("Bounty closure failed with logs: {:?}", close_outcome.logs());
+        if let Err(failure) = close_outcome.into_result() {
+            println!("Failure details: {:?}", failure);
+        }
+    }
+    
+    assert!(is_success, "Bounty closure failed");
 
     // Verify bounty results
     let results_outcome = contract
@@ -314,7 +331,7 @@ async fn test_platform_fee_collection(
             "description": "This should fail because contract is paused",
             "options": ["A", "B"],
             "max_stake_per_user": NearToken::from_near(10).as_yoctonear().to_string(),
-            "duration_blocks": 100
+            "duration_blocks": 50
         }))
         .transact()
         .await?;
@@ -382,14 +399,21 @@ async fn test_single_participant_bounty() -> Result<(), Box<dyn std::error::Erro
     assert!(stake_outcome.is_success());
 
     // Wait and close bounty
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
     
     let close_outcome = contract
         .call("close_bounty")
         .args_json(json!({"bounty_id": bounty_id}))
         .transact()
         .await?;
-    assert!(close_outcome.is_success());
+    let close_success = close_outcome.is_success();
+    if !close_success {
+        println!("Single participant bounty closure failed with logs: {:?}", close_outcome.logs());
+        if let Err(failure) = close_outcome.into_result() {
+            println!("Failure details: {:?}", failure);
+        }
+    }
+    assert!(close_success);
 
     // Verify bounty is closed
     let bounty_outcome = contract
@@ -430,7 +454,7 @@ async fn test_emergency_functions() -> Result<(), Box<dyn std::error::Error>> {
             "description": "Testing emergency functions",
             "options": ["A", "B"],
             "max_stake_per_user": NearToken::from_near(15).as_yoctonear().to_string(),
-            "duration_blocks": 1000 // Long duration
+            "duration_blocks": 50 // Longer duration for testing
         }))
         .transact()
         .await?

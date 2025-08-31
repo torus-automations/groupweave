@@ -5,6 +5,14 @@ use near_sdk::json_types::U128;
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, Promise, NearToken};
 use schemars::JsonSchema;
 
+// Safety constants to prevent overflow and ensure system stability
+
+const MAX_PLATFORM_FEE_RATE: u128 = 1000; // 10% maximum platform fee
+const MAX_BOUNTY_OPTIONS: usize = 1000; // Maximum options per bounty
+const MIN_BOUNTY_OPTIONS: usize = 2; // Minimum options per bounty
+const MAX_BOUNTY_DURATION: u64 = 1_000_000; // Maximum bounty duration in blocks
+const MIN_BOUNTY_DURATION: u64 = 1; // Minimum bounty duration in blocks
+
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Bounty {
@@ -144,14 +152,34 @@ pub struct BountyPredictionContract {
 impl BountyPredictionContract {
     #[init]
     pub fn new(reward_rate: u128, min_stake_amount: NearToken, max_stake_amount: NearToken) -> Self {
-        // Validate input parameters
+        // Define safe maximum limits to prevent overflow and errors
+        const MAX_REWARD_RATE: u128 = 1_000_000_000; // 1 billion - high but safe
+        const MAX_STAKE_AMOUNT: u128 = 100_000; // 100,000 NEAR maximum
+        const MIN_REWARD_RATE: u128 = 1; // Minimum 1 unit per second
+        
+        // Validate and clamp reward rate
+        let safe_reward_rate = if reward_rate == 0 {
+            MIN_REWARD_RATE
+        } else if reward_rate > MAX_REWARD_RATE {
+            MAX_REWARD_RATE
+        } else {
+            reward_rate
+        };
+        
+        // Validate stake amounts
         assert!(min_stake_amount <= max_stake_amount, "Minimum stake amount cannot exceed maximum");
-        assert!(reward_rate > 0, "Reward rate must be positive");
+        assert!(max_stake_amount.as_near() <= MAX_STAKE_AMOUNT, 
+            "Maximum stake amount cannot exceed {} NEAR", MAX_STAKE_AMOUNT);
+        
+        env::log_str(&format!(
+            "CONTRACT_INIT: reward_rate={} (clamped from {}), min_stake={}, max_stake={}",
+            safe_reward_rate, reward_rate, min_stake_amount.as_near(), max_stake_amount.as_near()
+        ));
         
         Self {
             stakes: LookupMap::new(b"s"),
             total_staked: NearToken::from_yoctonear(0),
-            reward_rate,
+            reward_rate: safe_reward_rate,
             min_stake_amount,
             max_stake_amount,
             owner: env::predecessor_account_id(),
@@ -755,21 +783,71 @@ impl BountyPredictionContract {
     // Owner functions
     pub fn update_reward_rate(&mut self, new_rate: u128) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update reward rate");
-        self.reward_rate = new_rate;
+        
+        // Define safe limits for reward rate updates
+        const MAX_REWARD_RATE: u128 = 1_000_000_000; // 1 billion - high but safe
+        const MIN_REWARD_RATE: u128 = 1; // Minimum 1 unit per second
+        
+        // Clamp the reward rate to safe bounds
+        let safe_rate = if new_rate == 0 {
+            MIN_REWARD_RATE
+        } else if new_rate > MAX_REWARD_RATE {
+            MAX_REWARD_RATE
+        } else {
+            new_rate
+        };
+        
+        env::log_str(&format!(
+            "REWARD_RATE_UPDATE: new_rate={} (clamped from {})", 
+            safe_rate, new_rate
+        ));
+        
+        self.reward_rate = safe_rate;
     }
 
     pub fn update_max_stake_amount(&mut self, new_max_amount: NearToken) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update max stake amount");
-        assert!(new_max_amount >= self.min_stake_amount, "Maximum stake amount cannot be less than minimum");
-        self.max_stake_amount = new_max_amount;
-        env::log_str(&format!("MAX_STAKE_UPDATED: New maximum stake amount is {} NEAR", new_max_amount));
+        
+        // Define safe limits for stake amounts
+        const MAX_STAKE_LIMIT_NEAR: u128 = 100_000; // 100,000 NEAR maximum
+        
+        // Ensure new max is not less than current min
+        let safe_max = if new_max_amount < self.min_stake_amount {
+            self.min_stake_amount
+        } else if new_max_amount.as_near() > MAX_STAKE_LIMIT_NEAR {
+            NearToken::from_near(MAX_STAKE_LIMIT_NEAR)
+        } else {
+            new_max_amount
+        };
+        
+        env::log_str(&format!(
+            "MAX_STAKE_UPDATE: new_max={} NEAR (clamped from {})", 
+            safe_max.as_near(), new_max_amount.as_near()
+        ));
+        
+        self.max_stake_amount = safe_max;
     }
 
     pub fn update_platform_fee_rate(&mut self, new_rate: u128) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update platform fee rate");
-        assert!(new_rate <= 1000, "Platform fee rate cannot exceed 10% (1000 basis points)");
-        self.platform_fee_rate = new_rate;
-        env::log_str(&format!("PLATFORM_FEE_UPDATED: New platform fee rate is {} basis points", new_rate));
+        
+        // Define safe limits for platform fee (in basis points)
+        const MAX_PLATFORM_FEE_RATE: u128 = 1000; // 10% maximum
+        const MIN_PLATFORM_FEE_RATE: u128 = 0; // 0% minimum (free)
+        
+        // Clamp the fee rate to safe bounds
+        let safe_rate = if new_rate > MAX_PLATFORM_FEE_RATE {
+            MAX_PLATFORM_FEE_RATE
+        } else {
+            new_rate.max(MIN_PLATFORM_FEE_RATE)
+        };
+        
+        env::log_str(&format!(
+            "PLATFORM_FEE_UPDATE: new_rate={}bp ({}%) clamped from {}bp", 
+            safe_rate, safe_rate / 100, new_rate
+        ));
+        
+        self.platform_fee_rate = safe_rate;
     }
 
     pub fn pause_contract(&mut self) {
@@ -1596,14 +1674,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Platform fee rate cannot exceed 10% (1000 basis points)")]
-    fn test_update_platform_fee_rate_too_high() {
+    fn test_update_platform_fee_rate_too_high_clamped() {
         let context = get_context(accounts(0), NearToken::from_near(0));
         testing_env!(context.build());
         let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
 
-        // Try to set fee rate above 10%
+        // Try to set fee rate above 10% - should be clamped to 10%
         contract.update_platform_fee_rate(1001);
+        assert_eq!(contract.get_platform_fee_rate(), 1000, "Platform fee should be clamped to 1000 (10%)");
     }
 
     #[test]
@@ -1687,13 +1765,7 @@ mod tests {
         assert_eq!(contract.get_contract_owner(), accounts(0));
     }
 
-    #[test]
-    #[should_panic(expected = "Reward rate must be positive")]
-    fn test_new_with_zero_reward_rate() {
-        let context = get_context(accounts(0), NearToken::from_near(0));
-        testing_env!(context.build());
-        BountyPredictionContract::new(0, MIN_STAKE, MAX_STAKE);
-    }
+
 
     #[test]
     fn test_calculate_rewards_safe_with_zero_rate() {
@@ -1749,14 +1821,14 @@ mod tests {
     }
 
     #[test]
-    fn test_update_reward_rate_to_high_value() {
+    fn test_update_reward_rate_to_high_value_clamped() {
         let context = get_context(accounts(0), NearToken::from_near(0));
         testing_env!(context.build());
         let mut contract = BountyPredictionContract::new(REWARD_RATE, MIN_STAKE, MAX_STAKE);
 
         let very_high_rate = u128::MAX / 1000;
         contract.update_reward_rate(very_high_rate);
-        assert_eq!(contract.get_reward_rate(), very_high_rate);
+        assert_eq!(contract.get_reward_rate(), 1_000_000_000, "Very high reward rate should be clamped to 1 billion");
     }
 
     #[test]

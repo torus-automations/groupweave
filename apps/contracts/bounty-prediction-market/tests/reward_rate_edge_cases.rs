@@ -8,7 +8,7 @@ async fn test_zero_reward_rate() -> Result<(), Box<dyn std::error::Error>> {
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
     
-    // Test initialization with zero reward rate (should fail)
+    // Test initialization with zero reward rate (should be clamped to 1)
     let zero_reward_rate = 0u128;
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(1000);
@@ -23,9 +23,25 @@ async fn test_zero_reward_rate() -> Result<(), Box<dyn std::error::Error>> {
         .transact()
         .await?;
     
-    assert!(!init_outcome.is_success(), "Contract initialization with zero reward rate should fail");
+    let is_success = init_outcome.is_success();
+    if !is_success {
+        println!("Contract initialization failed with logs: {:?}", init_outcome.logs());
+        if let Err(failure) = init_outcome.into_result() {
+            println!("Failure details: {:?}", failure);
+        }
+    }
     
-    println!("✅ Zero reward rate test passed - initialization properly rejected");
+    assert!(is_success, "Contract initialization with zero reward rate should succeed (clamped to 1)");
+    
+    // Verify the reward rate was clamped to 1
+    let rate_outcome = contract
+        .view("get_reward_rate")
+        .args_json(json!({}))
+        .await?;
+    let current_rate: u128 = rate_outcome.json()?;
+    assert_eq!(current_rate, 1, "Zero reward rate should be clamped to 1");
+    
+    println!("✅ Zero reward rate test passed - initialization properly clamped to minimum value");
     Ok(())
 }
 
@@ -35,8 +51,8 @@ async fn test_very_high_reward_rate() -> Result<(), Box<dyn std::error::Error>> 
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
     
-    // Test with very high reward rate (but still reasonable for JSON)
-    let very_high_reward_rate = 1_000_000_000_000u128; // 1 trillion - very high but JSON-safe
+    // Test with very high reward rate (should be clamped to max)
+    let very_high_reward_rate = 1_000_000_000_000u128; // 1 trillion - very high, should be clamped
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(1000);
     
@@ -51,6 +67,14 @@ async fn test_very_high_reward_rate() -> Result<(), Box<dyn std::error::Error>> 
         .await?;
     
     assert!(init_outcome.is_success(), "Contract initialization with high reward rate should succeed");
+    
+    // Verify the reward rate was clamped to maximum
+    let rate_outcome = contract
+        .view("get_reward_rate")
+        .args_json(json!({}))
+        .await?;
+    let current_rate: u128 = rate_outcome.json()?;
+    assert_eq!(current_rate, 1_000_000_000, "Very high reward rate should be clamped to 1 billion");
     
     // Test staking with high reward rate
     let user_account = sandbox.dev_create_account().await?;
@@ -180,8 +204,8 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .await?;
     assert!(stake_outcome.is_success(), "Initial staking should succeed");
     
-    // Test updating to very high reward rate
-    let very_high_rate = 1_000_000_000u128; // 1 billion - high but JSON-safe
+    // Test updating to very high reward rate (should be clamped)
+    let very_high_rate = 2_000_000_000u128; // 2 billion - above the 1 billion limit
     let update_outcome = contract
         .as_account()
         .call(contract.id(), "update_reward_rate")
@@ -190,13 +214,13 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .await?;
     assert!(update_outcome.is_success(), "Updating to high reward rate should succeed");
     
-    // Verify the rate was updated
+    // Verify the rate was clamped to maximum
     let rate_outcome = contract
         .view("get_reward_rate")
         .args_json(json!({}))
         .await?;
     let current_rate: u128 = rate_outcome.json()?;
-    assert_eq!(current_rate, very_high_rate, "Reward rate should be updated");
+    assert_eq!(current_rate, 1_000_000_000, "Reward rate should be clamped to maximum");
     
     // Test reward calculation with new high rate
     let rewards_outcome = contract
@@ -334,13 +358,14 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
     
     // Test boundary values for reward rate
     let boundary_values = vec![
-        1u128,                      // Minimum valid value
-        1_000_000u128,             // 1 million - high but reasonable
-        1_000_000_000u128,         // 1 billion - very high
-        1_000_000_000_000u128,     // 1 trillion - extremely high but JSON-safe
+        (0u128, 1u128),                                    // Zero should be clamped to 1
+        (1u128, 1u128),                                    // Minimum valid value
+        (1_000_000u128, 1_000_000u128),                   // 1 million - high but reasonable
+        (1_000_000_000u128, 1_000_000_000u128),           // 1 billion - at the limit
+        (1_000_000_000_000u128, 1_000_000_000u128),       // 1 trillion - should be clamped to 1 billion
     ];
     
-    for (idx, reward_rate) in boundary_values.iter().enumerate() {
+    for (idx, (input_rate, expected_rate)) in boundary_values.iter().enumerate() {
         let contract = sandbox.dev_deploy(contract_wasm).await?;
         
         let min_stake = NearToken::from_near(1);
@@ -349,7 +374,7 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
         let init_outcome = contract
             .call("new")
             .args_json(json!({
-                "reward_rate": reward_rate,
+                "reward_rate": input_rate,
                 "min_stake_amount": min_stake.as_yoctonear().to_string(),
                 "max_stake_amount": max_stake.as_yoctonear().to_string()
             }))
@@ -357,6 +382,14 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
             .await?;
         
         assert!(init_outcome.is_success(), "Boundary value {} initialization should succeed", idx);
+        
+        // Verify the reward rate was set/clamped correctly
+        let rate_outcome = contract
+            .view("get_reward_rate")
+            .args_json(json!({}))
+            .await?;
+        let actual_rate: u128 = rate_outcome.json()?;
+        assert_eq!(actual_rate, *expected_rate, "Boundary value {} should be clamped correctly", idx);
         
         let user_account = sandbox.dev_create_account().await?;
         
