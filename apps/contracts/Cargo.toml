@@ -5,8 +5,8 @@ members = [
 ]
 
 [workspace.dependencies]
-near-sdk = "5.0"
-near-contract-standards = "5.0"
+near-sdk = "5.17"
+near-contract-standards = "5.17"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 borsh = "1.0"
