@@ -143,7 +143,7 @@ pub struct BountyPredictionContract {
     // New bounty fields
     bounties: LookupMap<u64, Bounty>,
     participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
-    bounty_participants: LookupMap<u64, Vec<AccountId>>, // Efficient participant tracking
+    bounty_participants: Option<LookupMap<u64, Vec<AccountId>>>, // Efficient participant tracking
     next_bounty_id: u64,
     platform_fee_rate: u128, // 5% = 500 (basis points)
     is_paused: bool, // Emergency pause functionality
@@ -186,10 +186,121 @@ impl BountyPredictionContract {
             owner: env::predecessor_account_id(),
             bounties: LookupMap::new(b"b"),
             participant_stakes: LookupMap::new(b"p"),
-            bounty_participants: LookupMap::new(b"t"), // Participant tracking
+            bounty_participants: Some(LookupMap::new(b"t")), // Participant tracking
             next_bounty_id: 1,
             platform_fee_rate: 500, // 5%
             is_paused: false,
+        }
+    }
+
+    /// Migration method to handle contract upgrades
+    #[init(ignore_state)]
+    pub fn migrate() -> Self {
+        // Try to read the old state - if it fails, create a new contract
+        if let Some(old_state_bytes) = env::storage_read(b"STATE") {
+            env::log_str("CONTRACT_MIGRATION: Found existing state, attempting migration");
+            
+            // Try different versions of the contract state
+            // First try: assume it has all current fields
+            #[derive(BorshDeserialize)]
+            struct CurrentContract {
+                stakes: LookupMap<AccountId, StakeInfo>,
+                total_staked: NearToken,
+                reward_rate: u128,
+                min_stake_amount: NearToken,
+                max_stake_amount: NearToken,
+                owner: AccountId,
+                bounties: LookupMap<u64, Bounty>,
+                participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
+                bounty_participants: Option<LookupMap<u64, Vec<AccountId>>>,
+                next_bounty_id: u64,
+                platform_fee_rate: u128,
+                is_paused: bool,
+            }
+            
+            if let Ok(current_contract) = CurrentContract::try_from_slice(&old_state_bytes) {
+                env::log_str("CONTRACT_MIGRATION: Current format detected, preserving state");
+                return Self {
+                    stakes: current_contract.stakes,
+                    total_staked: current_contract.total_staked,
+                    reward_rate: current_contract.reward_rate,
+                    min_stake_amount: current_contract.min_stake_amount,
+                    max_stake_amount: current_contract.max_stake_amount,
+                    owner: current_contract.owner,
+                    bounties: current_contract.bounties,
+                    participant_stakes: current_contract.participant_stakes,
+                    bounty_participants: current_contract.bounty_participants.or_else(|| Some(LookupMap::new(b"t"))),
+                    next_bounty_id: current_contract.next_bounty_id,
+                    platform_fee_rate: current_contract.platform_fee_rate,
+                    is_paused: current_contract.is_paused,
+                };
+            }
+            
+            // Second try: assume it's missing bounty_participants field
+            #[derive(BorshDeserialize)]
+            struct OldContractV1 {
+                stakes: LookupMap<AccountId, StakeInfo>,
+                total_staked: NearToken,
+                reward_rate: u128,
+                min_stake_amount: NearToken,
+                max_stake_amount: NearToken,
+                owner: AccountId,
+                bounties: LookupMap<u64, Bounty>,
+                participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
+                next_bounty_id: u64,
+                platform_fee_rate: u128,
+                is_paused: bool,
+            }
+            
+            if let Ok(old_contract) = OldContractV1::try_from_slice(&old_state_bytes) {
+                env::log_str("CONTRACT_MIGRATION: V1 format detected, adding participant tracking");
+                return Self {
+                    stakes: old_contract.stakes,
+                    total_staked: old_contract.total_staked,
+                    reward_rate: old_contract.reward_rate,
+                    min_stake_amount: old_contract.min_stake_amount,
+                    max_stake_amount: old_contract.max_stake_amount,
+                    owner: old_contract.owner,
+                    bounties: old_contract.bounties,
+                    participant_stakes: old_contract.participant_stakes,
+                    bounty_participants: Some(LookupMap::new(b"t")), // Initialize new field
+                    next_bounty_id: old_contract.next_bounty_id,
+                    platform_fee_rate: old_contract.platform_fee_rate,
+                    is_paused: old_contract.is_paused,
+                };
+            }
+            
+            env::log_str("CONTRACT_MIGRATION: Could not parse existing state, creating new contract");
+        } else {
+            env::log_str("CONTRACT_MIGRATION: No existing state found, creating new contract");
+        }
+        
+        // Fallback: create a new contract with default values
+        Self {
+            stakes: LookupMap::new(b"s"),
+            total_staked: NearToken::from_yoctonear(0),
+            reward_rate: 1000, // Default reward rate
+            min_stake_amount: NearToken::from_near(1),
+            max_stake_amount: NearToken::from_near(1000),
+            owner: env::predecessor_account_id(),
+            bounties: LookupMap::new(b"b"),
+            participant_stakes: LookupMap::new(b"p"),
+            bounty_participants: Some(LookupMap::new(b"t")),
+            next_bounty_id: 1,
+            platform_fee_rate: 500, // 5%
+            is_paused: false,
+        }
+    }
+
+    /// Regular migration function that can be called after deployment
+    pub fn migrate_state(&mut self) {
+        // This function can be used to migrate state after deployment
+        // Initialize bounty_participants if it doesn't exist
+        if self.bounty_participants.is_none() {
+            self.bounty_participants = Some(LookupMap::new(b"t"));
+            env::log_str("CONTRACT_MIGRATION: Initialized bounty_participants field");
+        } else {
+            env::log_str("CONTRACT_MIGRATION: bounty_participants field already exists");
         }
     }
 
@@ -216,6 +327,18 @@ impl BountyPredictionContract {
             .and_then(|x| x.checked_mul(time_seconds as u128))
             .and_then(|x| x.checked_div(1_000_000_000_000_000_000_000_000))
             .unwrap_or(0) // Return 0 on overflow rather than panicking
+    }
+
+    // Helper function to lazily initialize bounty_participants for migration compatibility
+    fn get_bounty_participants_mut(&mut self) -> &mut LookupMap<u64, Vec<AccountId>> {
+        if self.bounty_participants.is_none() {
+            self.bounty_participants = Some(LookupMap::new(b"t"));
+        }
+        self.bounty_participants.as_mut().unwrap()
+    }
+
+    fn get_bounty_participants_ref(&self) -> Option<&LookupMap<u64, Vec<AccountId>>> {
+        self.bounty_participants.as_ref()
     }
 
     #[payable]
@@ -479,10 +602,11 @@ impl BountyPredictionContract {
         
         // Add participant to tracking list if they're new
         if is_new_participant {
-            let mut participants = self.bounty_participants.get(&bounty_id).unwrap_or_else(Vec::new);
+            let bounty_participants = self.get_bounty_participants_mut();
+            let mut participants = bounty_participants.get(&bounty_id).unwrap_or_else(Vec::new);
             if !participants.contains(&staker) {
                 participants.push(staker.clone());
-                self.bounty_participants.insert(&bounty_id, &participants);
+                bounty_participants.insert(&bounty_id, &participants);
             }
         }
         
@@ -535,12 +659,20 @@ impl BountyPredictionContract {
     }
 
     pub fn get_bounty_participants(&self, bounty_id: u64) -> Vec<AccountId> {
-        self.bounty_participants.get(&bounty_id).unwrap_or_else(Vec::new)
+        if let Some(bounty_participants) = self.get_bounty_participants_ref() {
+            bounty_participants.get(&bounty_id).unwrap_or_else(Vec::new)
+        } else {
+            Vec::new()
+        }
     }
 
     pub fn get_bounty_participant_count(&self, bounty_id: u64) -> u64 {
-        if let Some(participants) = self.bounty_participants.get(&bounty_id) {
-            participants.len() as u64
+        if let Some(bounty_participants) = self.get_bounty_participants_ref() {
+            if let Some(participants) = bounty_participants.get(&bounty_id) {
+                participants.len() as u64
+            } else {
+                0
+            }
         } else {
             0
         }
@@ -605,8 +737,12 @@ impl BountyPredictionContract {
 
     fn count_bounty_participants(&self, bounty_id: u64) -> u64 {
         // Use participant tracking system for accurate count
-        if let Some(participants) = self.bounty_participants.get(&bounty_id) {
-            participants.len() as u64
+        if let Some(bounty_participants) = self.get_bounty_participants_ref() {
+            if let Some(participants) = bounty_participants.get(&bounty_id) {
+                participants.len() as u64
+            } else {
+                0
+            }
         } else {
             0
         }
@@ -660,20 +796,21 @@ impl BountyPredictionContract {
 
     fn distribute_single_participant_rewards(&mut self, bounty: &mut Bounty) {
         // Use participant tracking system to find the single participant
-        if let Some(participants) = self.bounty_participants.get(&bounty.id) {
-            for account in participants {
-                let stake_key = (account.clone(), bounty.id);
-                if let Some(stake) = self.participant_stakes.get(&stake_key) {
-                    // Return full stake to participant
-                    Promise::new(account.clone()).transfer(stake.amount);
-                    env::log_str(&format!("SINGLE_PARTICIPANT_REFUND: {} received {} NEAR", 
-                                         account, stake.amount));
-                    return;
+        if let Some(bounty_participants) = self.get_bounty_participants_ref() {
+            if let Some(participants) = bounty_participants.get(&bounty.id) {
+                for account in participants {
+                    let stake_key = (account.clone(), bounty.id);
+                    if let Some(stake) = self.participant_stakes.get(&stake_key) {
+                        // Return full stake to participant
+                        Promise::new(account.clone()).transfer(stake.amount);
+                        env::log_str(&format!("SINGLE_PARTICIPANT_REFUND: {} received {} NEAR", 
+                                             account, stake.amount));
+                        return;
+                    }
                 }
             }
-        } else {
-            env::log_str(&format!("SINGLE_PARTICIPANT_ERROR: No participants found for bounty {}", bounty.id));
         }
+        env::log_str(&format!("SINGLE_PARTICIPANT_ERROR: No participants found for bounty {}", bounty.id));
     }
 
     fn distribute_multi_participant_rewards(&mut self, bounty: &mut Bounty) {
@@ -701,23 +838,27 @@ impl BountyPredictionContract {
 
     fn distribute_winner_rewards(&mut self, bounty: &Bounty, winning_option: u64) {
         // Use participant tracking system to iterate through all participants
-        if let Some(participants) = self.bounty_participants.get(&bounty.id) {
-            for account in participants {
-                let stake_key = (account.clone(), bounty.id);
-                if let Some(stake) = self.participant_stakes.get(&stake_key) {
-                    if stake.option_index == winning_option {
-                        // Calculate and transfer reward
-                        let reward = self.calculate_user_reward(bounty, stake.amount, winning_option);
-                        if reward > NearToken::from_yoctonear(0) {
-                            Promise::new(account.clone()).transfer(reward);
-                            env::log_str(&format!("WINNER_REWARD: {} received {} NEAR for winning option {}", 
-                                                 account, reward, winning_option));
+        if let Some(bounty_participants) = self.get_bounty_participants_ref() {
+            if let Some(participants) = bounty_participants.get(&bounty.id) {
+                for account in participants {
+                    let stake_key = (account.clone(), bounty.id);
+                    if let Some(stake) = self.participant_stakes.get(&stake_key) {
+                        if stake.option_index == winning_option {
+                            // Calculate and transfer reward
+                            let reward = self.calculate_user_reward(bounty, stake.amount, winning_option);
+                            if reward > NearToken::from_yoctonear(0) {
+                                Promise::new(account.clone()).transfer(reward);
+                                env::log_str(&format!("WINNER_REWARD: {} received {} NEAR for winning option {}", 
+                                                     account, reward, winning_option));
+                            }
                         }
                     }
                 }
+            } else {
+                env::log_str(&format!("WINNER_REWARD_ERROR: No participants found for bounty {}", bounty.id));
             }
         } else {
-            env::log_str(&format!("WINNER_REWARD_ERROR: No participants found for bounty {}", bounty.id));
+            env::log_str(&format!("WINNER_REWARD_ERROR: No participant tracking available for bounty {}", bounty.id));
         }
     }
 
@@ -886,16 +1027,20 @@ impl BountyPredictionContract {
 
     fn emergency_refund_participants(&mut self, bounty: &Bounty) {
         // Use participant tracking system to iterate through actual participants
-        if let Some(participants) = self.bounty_participants.get(&bounty.id) {
-            for account in participants {
-                let stake_key = (account.clone(), bounty.id);
-                if let Some(stake) = self.participant_stakes.get(&stake_key) {
-                    Promise::new(account.clone()).transfer(stake.amount);
-                    env::log_str(&format!("EMERGENCY_REFUND: {} refunded {} NEAR", account, stake.amount));
+        if let Some(bounty_participants) = self.get_bounty_participants_ref() {
+            if let Some(participants) = bounty_participants.get(&bounty.id) {
+                for account in participants {
+                    let stake_key = (account.clone(), bounty.id);
+                    if let Some(stake) = self.participant_stakes.get(&stake_key) {
+                        Promise::new(account.clone()).transfer(stake.amount);
+                        env::log_str(&format!("EMERGENCY_REFUND: {} refunded {} NEAR", account, stake.amount));
+                    }
                 }
+            } else {
+                env::log_str(&format!("EMERGENCY_REFUND: No participants found for bounty {}", bounty.id));
             }
         } else {
-            env::log_str(&format!("EMERGENCY_REFUND: No participants found for bounty {}", bounty.id));
+            env::log_str(&format!("EMERGENCY_REFUND: No participant tracking available for bounty {}", bounty.id));
         }
     }
 
