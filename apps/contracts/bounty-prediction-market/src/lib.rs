@@ -193,6 +193,117 @@ impl BountyPredictionContract {
         }
     }
 
+    /// Migration method to handle contract upgrades
+    #[init(ignore_state)]
+    pub fn migrate() -> Self {
+        // Try to read the old state - if it fails, create a new contract
+        if let Some(old_state_bytes) = env::storage_read(b"STATE") {
+            env::log_str("CONTRACT_MIGRATION: Found existing state, attempting migration");
+            
+            // Try different versions of the contract state
+            // First try: assume it has all current fields
+            #[derive(BorshDeserialize)]
+            struct CurrentContract {
+                stakes: LookupMap<AccountId, StakeInfo>,
+                total_staked: NearToken,
+                reward_rate: u128,
+                min_stake_amount: NearToken,
+                max_stake_amount: NearToken,
+                owner: AccountId,
+                bounties: LookupMap<u64, Bounty>,
+                participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
+                bounty_participants: Option<LookupMap<u64, Vec<AccountId>>>,
+                next_bounty_id: u64,
+                platform_fee_rate: u128,
+                is_paused: bool,
+            }
+            
+            if let Ok(current_contract) = CurrentContract::try_from_slice(&old_state_bytes) {
+                env::log_str("CONTRACT_MIGRATION: Current format detected, preserving state");
+                return Self {
+                    stakes: current_contract.stakes,
+                    total_staked: current_contract.total_staked,
+                    reward_rate: current_contract.reward_rate,
+                    min_stake_amount: current_contract.min_stake_amount,
+                    max_stake_amount: current_contract.max_stake_amount,
+                    owner: current_contract.owner,
+                    bounties: current_contract.bounties,
+                    participant_stakes: current_contract.participant_stakes,
+                    bounty_participants: current_contract.bounty_participants.or_else(|| Some(LookupMap::new(b"t"))),
+                    next_bounty_id: current_contract.next_bounty_id,
+                    platform_fee_rate: current_contract.platform_fee_rate,
+                    is_paused: current_contract.is_paused,
+                };
+            }
+            
+            // Second try: assume it's missing bounty_participants field
+            #[derive(BorshDeserialize)]
+            struct OldContractV1 {
+                stakes: LookupMap<AccountId, StakeInfo>,
+                total_staked: NearToken,
+                reward_rate: u128,
+                min_stake_amount: NearToken,
+                max_stake_amount: NearToken,
+                owner: AccountId,
+                bounties: LookupMap<u64, Bounty>,
+                participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
+                next_bounty_id: u64,
+                platform_fee_rate: u128,
+                is_paused: bool,
+            }
+            
+            if let Ok(old_contract) = OldContractV1::try_from_slice(&old_state_bytes) {
+                env::log_str("CONTRACT_MIGRATION: V1 format detected, adding participant tracking");
+                return Self {
+                    stakes: old_contract.stakes,
+                    total_staked: old_contract.total_staked,
+                    reward_rate: old_contract.reward_rate,
+                    min_stake_amount: old_contract.min_stake_amount,
+                    max_stake_amount: old_contract.max_stake_amount,
+                    owner: old_contract.owner,
+                    bounties: old_contract.bounties,
+                    participant_stakes: old_contract.participant_stakes,
+                    bounty_participants: Some(LookupMap::new(b"t")), // Initialize new field
+                    next_bounty_id: old_contract.next_bounty_id,
+                    platform_fee_rate: old_contract.platform_fee_rate,
+                    is_paused: old_contract.is_paused,
+                };
+            }
+            
+            env::log_str("CONTRACT_MIGRATION: Could not parse existing state, creating new contract");
+        } else {
+            env::log_str("CONTRACT_MIGRATION: No existing state found, creating new contract");
+        }
+        
+        // Fallback: create a new contract with default values
+        Self {
+            stakes: LookupMap::new(b"s"),
+            total_staked: NearToken::from_yoctonear(0),
+            reward_rate: 1000, // Default reward rate
+            min_stake_amount: NearToken::from_near(1),
+            max_stake_amount: NearToken::from_near(1000),
+            owner: env::predecessor_account_id(),
+            bounties: LookupMap::new(b"b"),
+            participant_stakes: LookupMap::new(b"p"),
+            bounty_participants: Some(LookupMap::new(b"t")),
+            next_bounty_id: 1,
+            platform_fee_rate: 500, // 5%
+            is_paused: false,
+        }
+    }
+
+    /// Regular migration function that can be called after deployment
+    pub fn migrate_state(&mut self) {
+        // This function can be used to migrate state after deployment
+        // Initialize bounty_participants if it doesn't exist
+        if self.bounty_participants.is_none() {
+            self.bounty_participants = Some(LookupMap::new(b"t"));
+            env::log_str("CONTRACT_MIGRATION: Initialized bounty_participants field");
+        } else {
+            env::log_str("CONTRACT_MIGRATION: bounty_participants field already exists");
+        }
+    }
+
     // Helper function for safe token addition
     fn safe_add_tokens(a: NearToken, b: NearToken) -> Result<NearToken, &'static str> {
         a.as_yoctonear().checked_add(b.as_yoctonear())
