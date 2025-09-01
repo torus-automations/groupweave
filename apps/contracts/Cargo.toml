@@ -1,5 +1,5 @@
 [workspace]
-members = []
+members = ["bounty-prediction-market"]
 
 [workspace.dependencies]
 near-sdk = "5.17"
