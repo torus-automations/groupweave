@@ -13,9 +13,6 @@ contracts/
 ├── staking/            # 💰 Staking Contract
 │   ├── src/lib.rs
 │   └── Cargo.toml
-└── zkp-verifier/       # 🔒 ZKP Verifier Contract
-    ├── src/lib.rs
-    └── Cargo.toml
 ```
 
 ## Contracts
@@ -35,13 +32,6 @@ Manages token staking and rewards with flexible betting amounts:
 - Earn rewards over time.
 - Unstake with reward claims.
 - Configurable reward rates and staking limits.
-
-### ZKP Verifier Contract
-Zero-knowledge proof verification:
-- Submit ZK proofs
-- Verify proofs with authorized verifiers
-- Store verification results
-- Simple hash-based proof verification
 
 ## Development
 
@@ -75,9 +65,6 @@ near deploy --wasmFile target/wasm32-unknown-unknown/release/voting_contract.was
 
 # Deploy staking contract
 near deploy --wasmFile target/wasm32-unknown-unknown/release/staking_contract.wasm --accountId your-staking.testnet --initFunction new --initArgs '{"reward_rate": "10", "min_stake_amount": "1000000000000000000000000", "max_stake_amount": "100000000000000000000000000"}'
-
-# Deploy ZKP verifier contract
-near deploy --wasmFile target/wasm32-unknown-unknown/release/zkp_verifier_contract.wasm --accountId your-zkp.testnet
 ```
 
 ## Usage Examples
@@ -107,13 +94,4 @@ near call your-staking.testnet claim_rewards --accountId your-account.testnet
 
 # Update max stake amount (owner only)
 near call your-staking.testnet update_max_stake_amount '{"new_max_amount": "200000000000000000000000000"}' --accountId your-staking.testnet
-```
-
-### ZKP Verifier Contract
-```bash
-# Submit a proof
-near call your-zkp.testnet submit_proof '{"proof_id": "proof1", "proof_data": "base64_proof", "public_inputs": ["input1"], "verification_key": "vk_data"}' --accountId your-account.testnet
-
-# Verify a proof (authorized verifier only)
-near call your-zkp.testnet verify_proof '{"proof_id": "proof1", "is_valid": true}' --accountId verifier.testnet
 ```
