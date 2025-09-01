@@ -1,7 +1,6 @@
 [workspace]
 members = [
-    "bounty-prediction-market",
-    "zkp-verifier"
+    "bounty-prediction-market"
 ]
 
 [workspace.dependencies]

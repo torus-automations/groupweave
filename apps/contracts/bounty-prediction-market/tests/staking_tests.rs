@@ -18,12 +18,12 @@ async fn test_backward_compatibility() -> Result<(), Box<dyn std::error::Error>>
 async fn test_basics_on(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
-    
+
     // Initialize the contract
     let reward_rate = 100u128; // 100 rewards per second per NEAR
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(1000);
-    
+
     let init_outcome = contract
         .call("new")
         .args_json(json!({
@@ -33,27 +33,27 @@ async fn test_basics_on(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::
         }))
         .transact()
         .await?;
-    
+
     assert!(init_outcome.is_success(), "Contract initialization failed: {:#?}", init_outcome.into_result().unwrap_err());
 
     // Test contract initialization
     test_contract_initialization(&contract).await?;
-    
+
     // Test staking functionality
     test_staking_flow(&sandbox, &contract).await?;
-    
+
     // Test reward calculations
     test_reward_calculations(&sandbox, &contract).await?;
-    
+
     // Test unstaking
     test_unstaking_flow(&sandbox, &contract).await?;
-    
+
     // Test edge cases
     test_edge_cases(&sandbox, &contract).await?;
-    
+
     // Test multiple users staking
     test_multiple_users_staking(&sandbox, &contract).await?;
-    
+
     // Test error conditions
     test_error_conditions(&sandbox, &contract).await?;
 
@@ -94,7 +94,7 @@ async fn test_staking_flow(
     contract: &near_workspaces::Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user_account = sandbox.dev_create_account().await?;
-    
+
     // Get initial total staked (should be 0)
     let initial_total_outcome = contract
         .view("get_total_staked")
@@ -121,8 +121,8 @@ async fn test_staking_flow(
     assert!(stake_info.is_some(), "Stake info should exist after staking");
     let stake_info = stake_info.unwrap();
     assert_eq!(
-        stake_info["amount"].as_str().unwrap(), 
-        stake_amount.as_yoctonear().to_string(), 
+        stake_info["amount"].as_str().unwrap(),
+        stake_amount.as_yoctonear().to_string(),
         "Staked amount should match deposited amount"
     );
 
@@ -133,8 +133,8 @@ async fn test_staking_flow(
         .await?;
     let total_staked: String = total_staked_outcome.json()?;
     assert_eq!(
-        total_staked, 
-        stake_amount.as_yoctonear().to_string(), 
+        total_staked,
+        stake_amount.as_yoctonear().to_string(),
         "Total staked should equal the staked amount"
     );
 
@@ -156,8 +156,8 @@ async fn test_staking_flow(
     let updated_stake_info: Option<serde_json::Value> = updated_stake_info_outcome.json()?;
     let updated_stake_info = updated_stake_info.unwrap();
     assert_eq!(
-        updated_stake_info["amount"].as_str().unwrap(), 
-        combined_expected.to_string(), 
+        updated_stake_info["amount"].as_str().unwrap(),
+        combined_expected.to_string(),
         "Combined stake should equal sum of both stakes"
     );
 
@@ -168,8 +168,8 @@ async fn test_staking_flow(
         .await?;
     let final_total: String = final_total_outcome.json()?;
     assert_eq!(
-        final_total, 
-        combined_expected.to_string(), 
+        final_total,
+        combined_expected.to_string(),
         "Total staked should equal combined stake amount"
     );
 
@@ -182,7 +182,7 @@ async fn test_reward_calculations(
     contract: &near_workspaces::Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user_account = sandbox.dev_create_account().await?;
-    
+
     // Check initial pending rewards (should be 0 for non-staker)
     let initial_rewards_outcome = contract
         .view("calculate_pending_rewards")
@@ -217,10 +217,10 @@ async fn test_reward_calculations(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let pending_rewards: String = pending_rewards_outcome.json()?;
-    
+
     // Rewards calculation should work (might be 0 due to test environment timing)
     assert!(!pending_rewards.is_empty(), "Pending rewards calculation should return a value");
-    
+
     // Test claiming rewards
     let claim_outcome = user_account
         .call(contract.id(), "claim_rewards")
@@ -244,8 +244,8 @@ async fn test_reward_calculations(
     let stake_info: Option<serde_json::Value> = stake_info_outcome.json()?;
     let stake_info = stake_info.unwrap();
     assert_eq!(
-        stake_info["amount"].as_str().unwrap(), 
-        stake_amount.as_yoctonear().to_string(), 
+        stake_info["amount"].as_str().unwrap(),
+        stake_amount.as_yoctonear().to_string(),
         "Stake amount should be unchanged after claiming rewards"
     );
 
@@ -258,10 +258,10 @@ async fn test_unstaking_flow(
     contract: &near_workspaces::Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user_account = sandbox.dev_create_account().await?;
-    
+
     // Get initial user balance
     let _initial_balance = user_account.view_account().await?.balance;
-    
+
     // First stake some tokens
     let stake_amount = NearToken::from_near(10);
     let stake_outcome = user_account
@@ -307,8 +307,8 @@ async fn test_unstaking_flow(
     assert!(stake_info_after.is_some(), "Stake info should still exist after partial unstaking");
     let stake_info_after = stake_info_after.unwrap();
     assert_eq!(
-        stake_info_after["amount"].as_str().unwrap(), 
-        remaining_expected.to_string(), 
+        stake_info_after["amount"].as_str().unwrap(),
+        remaining_expected.to_string(),
         "Remaining stake amount should be original - unstaked amount"
     );
 
@@ -320,8 +320,8 @@ async fn test_unstaking_flow(
     let total_staked_after: String = total_staked_after_outcome.json()?;
     let expected_total_after = total_staked_before.parse::<u128>().unwrap() - unstake_amount.as_yoctonear();
     assert_eq!(
-        total_staked_after.parse::<u128>().unwrap(), 
-        expected_total_after, 
+        total_staked_after.parse::<u128>().unwrap(),
+        expected_total_after,
         "Total staked should decrease by unstaked amount"
     );
 
@@ -351,7 +351,7 @@ async fn test_edge_cases(
     contract: &near_workspaces::Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user_account = sandbox.dev_create_account().await?;
-    
+
     // Test staking with minimum amount (should work)
     let min_stake = NearToken::from_near(1);
     let _outcome = user_account
@@ -360,7 +360,7 @@ async fn test_edge_cases(
         .transact()
         .await?;
     // This might fail if min_stake is higher, but we test the behavior
-    
+
     // Test getting stake info for non-existent account
     let non_existent_account = "non-existent.testnet";
     let stake_info_outcome = contract
@@ -392,7 +392,7 @@ async fn test_multiple_users_staking(
         .await?
         .json()?;
     let initial_total = initial_total_staked.parse::<u128>().unwrap();
-    
+
     // Create multiple user accounts
     let user1 = sandbox.dev_create_account().await?;
     let user2 = sandbox.dev_create_account().await?;
@@ -461,8 +461,8 @@ async fn test_multiple_users_staking(
         .await?
         .json()?;
     assert_eq!(
-        total_staked.parse::<u128>().unwrap(), 
-        expected_total, 
+        total_staked.parse::<u128>().unwrap(),
+        expected_total,
         "Total staked should equal initial total plus sum of all new individual stakes"
     );
 
@@ -484,7 +484,7 @@ async fn test_multiple_users_staking(
         .json::<Option<serde_json::Value>>()?
         .unwrap();
     assert_eq!(
-        updated_stake_info2["amount"].as_str().unwrap(), 
+        updated_stake_info2["amount"].as_str().unwrap(),
         remaining_stake2.to_string(),
         "User 2's remaining stake should be correct"
     );
@@ -497,8 +497,8 @@ async fn test_multiple_users_staking(
         .await?
         .json()?;
     assert_eq!(
-        new_total_staked.parse::<u128>().unwrap(), 
-        new_expected_total, 
+        new_total_staked.parse::<u128>().unwrap(),
+        new_expected_total,
         "Total staked should decrease by unstaked amount"
     );
 
@@ -510,7 +510,7 @@ async fn test_multiple_users_staking(
         .json::<Option<serde_json::Value>>()?
         .unwrap();
     assert_eq!(
-        final_stake_info1["amount"].as_str().unwrap(), 
+        final_stake_info1["amount"].as_str().unwrap(),
         stake1.as_yoctonear().to_string(),
         "User 1's stake should be unaffected"
     );
@@ -522,7 +522,7 @@ async fn test_multiple_users_staking(
         .json::<Option<serde_json::Value>>()?
         .unwrap();
     assert_eq!(
-        final_stake_info3["amount"].as_str().unwrap(), 
+        final_stake_info3["amount"].as_str().unwrap(),
         stake3.as_yoctonear().to_string(),
         "User 3's stake should be unaffected"
     );
@@ -587,8 +587,8 @@ async fn test_error_conditions(
     assert!(stake_info.is_some(), "Original stake should still exist");
     let stake_info = stake_info.unwrap();
     assert_eq!(
-        stake_info["amount"].as_str().unwrap(), 
-        stake_amount.as_yoctonear().to_string(), 
+        stake_info["amount"].as_str().unwrap(),
+        stake_amount.as_yoctonear().to_string(),
         "Original stake amount should be unchanged after failed operations"
     );
 
@@ -601,12 +601,12 @@ async fn test_owner_functions() -> Result<(), Box<dyn std::error::Error>> {
     let contract_wasm = &near_workspaces::compile_project("./").await?;
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
-    
+
     // Initialize the contract
     let reward_rate = 100u128;
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(1000);
-    
+
     let init_outcome = contract
         .call("new")
         .args_json(json!({
@@ -616,7 +616,7 @@ async fn test_owner_functions() -> Result<(), Box<dyn std::error::Error>> {
         }))
         .transact()
         .await?;
-    
+
     assert!(init_outcome.is_success(), "Contract initialization failed");
 
     // Test updating reward rate (should work for owner)
@@ -627,14 +627,14 @@ async fn test_owner_functions() -> Result<(), Box<dyn std::error::Error>> {
         .args_json(json!({"new_rate": new_rate}))
         .transact()
         .await?;
-    
+
     // Verify the rate was updated
     let reward_rate_outcome = contract
         .view("get_reward_rate")
         .args_json(json!({}))
         .await?;
     let _current_rate: u128 = reward_rate_outcome.json()?;
-    
+
     println!("✅ Owner function tests completed");
     Ok(())
 }
@@ -645,12 +645,12 @@ async fn test_max_stake_limits() -> Result<(), Box<dyn std::error::Error>> {
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
     let _user_account = sandbox.dev_create_account().await?;
-    
+
     // Initialize the contract
     let reward_rate = 100u128;
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(1000);
-    
+
     let init_outcome = contract
         .call("new")
         .args_json(json!({
@@ -660,7 +660,7 @@ async fn test_max_stake_limits() -> Result<(), Box<dyn std::error::Error>> {
         }))
         .transact()
         .await?;
-    
+
     assert!(init_outcome.is_success(), "Contract initialization failed");
 
     // Get max stake amount
@@ -669,7 +669,7 @@ async fn test_max_stake_limits() -> Result<(), Box<dyn std::error::Error>> {
         .args_json(json!({}))
         .await?;
     let _max_stake_str: String = max_stake_outcome.json()?;
-    
+
     // Test updating max stake amount
     let new_max_amount = NearToken::from_near(1000);
     let _update_outcome = contract
@@ -686,12 +686,12 @@ async fn test_max_stake_limits() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
-    
+
     // Initialize the contract (same as before)
     let reward_rate = 100u128;
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(1000);
-    
+
     let init_outcome = contract
         .call("new")
         .args_json(json!({
@@ -701,12 +701,12 @@ async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), B
         }))
         .transact()
         .await?;
-    
+
     assert!(init_outcome.is_success(), "Contract initialization failed");
 
     // Test that all legacy staking functions still work
     test_legacy_staking_operations(&sandbox, &contract).await?;
-    
+
     // Test bounty and staking coexistence with a fresh contract to avoid state interference
     let fresh_contract = sandbox.dev_deploy(contract_wasm).await?;
     let fresh_init_outcome = fresh_contract
@@ -719,7 +719,7 @@ async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), B
         .transact()
         .await?;
     assert!(fresh_init_outcome.is_success(), "Fresh contract initialization failed");
-    
+
     test_bounty_and_staking_coexistence(&sandbox, &fresh_contract).await?;
 
     println!("✅ Backward compatibility tests passed");
@@ -731,7 +731,7 @@ async fn test_legacy_staking_operations(
     contract: &near_workspaces::Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user_account = sandbox.dev_create_account().await?;
-    
+
     // Test legacy staking (should still work)
     let stake_amount = NearToken::from_near(10);
     let outcome = user_account
@@ -750,8 +750,8 @@ async fn test_legacy_staking_operations(
     assert!(stake_info.is_some(), "Legacy stake info should be retrievable");
     let stake_info = stake_info.unwrap();
     assert_eq!(
-        stake_info["amount"].as_str().unwrap(), 
-        stake_amount.as_yoctonear().to_string(), 
+        stake_info["amount"].as_str().unwrap(),
+        stake_amount.as_yoctonear().to_string(),
         "Legacy staked amount should match"
     );
 
@@ -788,9 +788,9 @@ async fn test_bounty_and_staking_coexistence(
     contract: &near_workspaces::Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user_account = sandbox.dev_create_account().await?;
-    
+
     // User can do both legacy staking and bounty participation
-    
+
     // 1. Legacy staking
     let legacy_stake = NearToken::from_near(5);
     let legacy_outcome = user_account
@@ -824,7 +824,7 @@ async fn test_bounty_and_staking_coexistence(
     assert!(bounty_outcome.is_success(), "Bounty staking should work alongside legacy staking");
 
     // 3. Verify both systems work independently
-    
+
     // Check legacy stake
     let legacy_stake_info = contract
         .view("get_stake_info")
@@ -832,7 +832,7 @@ async fn test_bounty_and_staking_coexistence(
         .await?
         .json::<Option<serde_json::Value>>()?;
     assert!(legacy_stake_info.is_some());
-    
+
     // Check bounty stake
     let bounty_stake_info = contract
         .view("get_participant_stake")

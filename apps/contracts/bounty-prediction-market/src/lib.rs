@@ -139,7 +139,7 @@ pub struct BountyPredictionContract {
     min_stake_amount: NearToken,
     max_stake_amount: NearToken,
     owner: AccountId,
-    
+
     // New bounty fields
     bounties: LookupMap<u64, Bounty>,
     participant_stakes: LookupMap<(AccountId, u64), ParticipantStake>,
@@ -157,7 +157,7 @@ impl BountyPredictionContract {
         const MAX_REWARD_RATE: u128 = 1_000_000_000; // 1 billion - high but safe
         const MAX_STAKE_AMOUNT: u128 = 100_000; // 100,000 NEAR maximum
         const MIN_REWARD_RATE: u128 = 1; // Minimum 1 unit per second
-        
+
         // Validate and clamp reward rate
         let safe_reward_rate = if reward_rate == 0 {
             MIN_REWARD_RATE
@@ -166,17 +166,17 @@ impl BountyPredictionContract {
         } else {
             reward_rate
         };
-        
+
         // Validate stake amounts
         assert!(min_stake_amount <= max_stake_amount, "Minimum stake amount cannot exceed maximum");
-        assert!(max_stake_amount.as_near() <= MAX_STAKE_AMOUNT, 
+        assert!(max_stake_amount.as_near() <= MAX_STAKE_AMOUNT,
             "Maximum stake amount cannot exceed {} NEAR", MAX_STAKE_AMOUNT);
-        
+
         env::log_str(&format!(
             "CONTRACT_INIT: reward_rate={} (clamped from {}), min_stake={}, max_stake={}",
             safe_reward_rate, reward_rate, min_stake_amount.as_near(), max_stake_amount.as_near()
         ));
-        
+
         Self {
             stakes: LookupMap::new(b"s"),
             total_staked: NearToken::from_yoctonear(0),
@@ -199,7 +199,7 @@ impl BountyPredictionContract {
         // Try to read the old state - if it fails, create a new contract
         if let Some(old_state_bytes) = env::storage_read(b"STATE") {
             env::log_str("CONTRACT_MIGRATION: Found existing state, attempting migration");
-            
+
             // Try different versions of the contract state
             // First try: assume it has all current fields
             #[derive(BorshDeserialize)]
@@ -217,7 +217,7 @@ impl BountyPredictionContract {
                 platform_fee_rate: u128,
                 is_paused: bool,
             }
-            
+
             if let Ok(current_contract) = CurrentContract::try_from_slice(&old_state_bytes) {
                 env::log_str("CONTRACT_MIGRATION: Current format detected, preserving state");
                 return Self {
@@ -235,7 +235,7 @@ impl BountyPredictionContract {
                     is_paused: current_contract.is_paused,
                 };
             }
-            
+
             // Second try: assume it's missing bounty_participants field
             #[derive(BorshDeserialize)]
             struct OldContractV1 {
@@ -251,7 +251,7 @@ impl BountyPredictionContract {
                 platform_fee_rate: u128,
                 is_paused: bool,
             }
-            
+
             if let Ok(old_contract) = OldContractV1::try_from_slice(&old_state_bytes) {
                 env::log_str("CONTRACT_MIGRATION: V1 format detected, adding participant tracking");
                 return Self {
@@ -269,12 +269,12 @@ impl BountyPredictionContract {
                     is_paused: old_contract.is_paused,
                 };
             }
-            
+
             env::log_str("CONTRACT_MIGRATION: Could not parse existing state, creating new contract");
         } else {
             env::log_str("CONTRACT_MIGRATION: No existing state found, creating new contract");
         }
-        
+
         // Fallback: create a new contract with default values
         Self {
             stakes: LookupMap::new(b"s"),
@@ -296,15 +296,15 @@ impl BountyPredictionContract {
     /// Only callable by the contract owner for security
     pub fn migrate_state(&mut self) {
         self.assert_owner();
-        
+
         // This function can be used to migrate state after deployment
         // Initialize bounty_participants if it doesn't exist
         if self.bounty_participants.is_none() {
             self.bounty_participants = Some(LookupMap::new(b"t"));
             env::log_str("CONTRACT_MIGRATION: Initialized bounty_participants field");
-            
+
             // Log current contract state for verification
-            env::log_str(&format!("CONTRACT_MIGRATION: Current state - next_bounty_id: {}, paused: {}", 
+            env::log_str(&format!("CONTRACT_MIGRATION: Current state - next_bounty_id: {}, paused: {}",
                                  self.next_bounty_id, self.is_paused));
         } else {
             env::log_str("CONTRACT_MIGRATION: bounty_participants field already exists");
@@ -352,10 +352,10 @@ impl BountyPredictionContract {
     pub fn stake(&mut self) {
         let staker = env::predecessor_account_id();
         let amount = env::attached_deposit();
-        
+
         assert!(amount >= self.min_stake_amount, "Stake amount too low");
         assert!(amount <= self.max_stake_amount, "Stake amount too high");
-        
+
         // Validate that total stake (existing + new) doesn't exceed maximum
         let new_total_stake = if let Some(existing_stake) = self.stakes.get(&staker) {
             Self::safe_add_tokens(existing_stake.amount, amount)
@@ -363,15 +363,15 @@ impl BountyPredictionContract {
         } else {
             amount
         };
-        
+
         assert!(new_total_stake <= self.max_stake_amount, "Total stake would exceed maximum allowed");
-        
+
         let current_time = env::block_timestamp();
-        
+
         if let Some(mut stake_info) = self.stakes.get(&staker) {
             // Claim pending rewards before updating stake
             self.internal_claim_rewards(&staker, &mut stake_info);
-            
+
             // Add to existing stake using safe addition
             stake_info.amount = Self::safe_add_tokens(stake_info.amount, amount)
                 .expect("Stake addition overflow");
@@ -386,7 +386,7 @@ impl BountyPredictionContract {
             };
             self.stakes.insert(&staker, &stake_info);
         }
-        
+
         // Update total staked using safe addition
         self.total_staked = Self::safe_add_tokens(self.total_staked, amount)
             .expect("Total stake addition overflow");
@@ -397,25 +397,25 @@ impl BountyPredictionContract {
     pub fn unstake(&mut self, amount: NearToken) {
         let staker = env::predecessor_account_id();
         let mut stake_info = self.stakes.get(&staker).expect("No stake found");
-        
+
         assert!(stake_info.amount >= amount, "Insufficient staked amount");
         assert!(amount > NearToken::from_yoctonear(0), "Unstake amount must be positive");
-        
+
         // Claim pending rewards
         self.internal_claim_rewards(&staker, &mut stake_info);
-        
+
         // Update stake using safe subtraction
         stake_info.amount = Self::safe_sub_tokens(stake_info.amount, amount)
             .expect("Stake subtraction underflow");
         self.total_staked = Self::safe_sub_tokens(self.total_staked, amount)
             .expect("Total stake subtraction underflow");
-        
+
         if stake_info.amount == NearToken::from_yoctonear(0) {
             self.stakes.remove(&staker);
         } else {
             self.stakes.insert(&staker, &stake_info);
         }
-        
+
         // Transfer unstaked amount back to user
         Promise::new(staker).transfer(amount);
     }
@@ -423,7 +423,7 @@ impl BountyPredictionContract {
     pub fn claim_rewards(&mut self) {
         let staker = env::predecessor_account_id();
         let mut stake_info = self.stakes.get(&staker).expect("No stake found");
-        
+
         self.internal_claim_rewards(&staker, &mut stake_info);
         self.stakes.insert(&staker, &stake_info);
     }
@@ -432,17 +432,17 @@ impl BountyPredictionContract {
         let current_time = env::block_timestamp();
         let time_diff = current_time - stake_info.last_reward_claim;
         let time_diff_seconds = time_diff / 1_000_000_000;
-        
+
         let rewards = Self::calculate_rewards_safe(stake_info.amount, self.reward_rate, time_diff_seconds);
-        
+
         if rewards > 0 {
             let reward_amount = NearToken::from_yoctonear(rewards);
-            
+
             // Check if contract has sufficient balance to pay rewards
             // Reserve 1 NEAR for contract operations
             let contract_balance = env::account_balance();
             let reserved_balance = NearToken::from_near(1);
-            
+
             if contract_balance > Self::safe_add_tokens(reward_amount, reserved_balance).unwrap_or(contract_balance) {
                 stake_info.last_reward_claim = current_time;
                 Promise::new(staker.clone()).transfer(reward_amount);
@@ -462,7 +462,7 @@ impl BountyPredictionContract {
             let current_time = env::block_timestamp();
             let time_diff = current_time - stake_info.last_reward_claim;
             let time_diff_seconds = time_diff / 1_000_000_000;
-            
+
             let rewards = Self::calculate_rewards_safe(stake_info.amount, self.reward_rate, time_diff_seconds);
             U128(rewards)
         } else {
@@ -498,38 +498,38 @@ impl BountyPredictionContract {
     ) -> u64 {
         self.assert_not_paused();
         let creator = env::predecessor_account_id();
-        
+
         // Validate inputs
         assert!(!title.trim().is_empty(), "Title cannot be empty");
         assert!(!description.trim().is_empty(), "Description cannot be empty");
         assert!(title.len() <= 200, "Title too long (max 200 characters)");
         assert!(description.len() <= 1000, "Description too long (max 1000 characters)");
-        
+
         // Validate options count (2-1000)
         assert!(options.len() >= 2, "Bounty must have at least 2 options");
         assert!(options.len() <= 1000, "Bounty cannot have more than 1000 options");
-        
+
         // Validate option content
         for (i, option) in options.iter().enumerate() {
             assert!(!option.trim().is_empty(), "Option {} cannot be empty", i);
             assert!(option.len() <= 100, "Option {} too long (max 100 characters)", i);
         }
-        
+
         // Validate max stake amount (0.1 to 10000 NEAR)
         let min_bounty_stake = NearToken::from_millinear(100); // 0.1 NEAR
         let max_bounty_stake = NearToken::from_near(10000);
         assert!(max_stake_per_user >= min_bounty_stake, "Maximum stake per user must be at least 0.1 NEAR");
         assert!(max_stake_per_user <= max_bounty_stake, "Maximum stake per user cannot exceed 10000 NEAR");
-        
+
         // Validate duration
         assert!(duration_blocks > 0, "Duration must be greater than 0 blocks");
-        
+
         let bounty_id = self.next_bounty_id;
         let current_time = env::block_timestamp();
         let ends_at = current_time + (duration_blocks * 1_000_000_000); // Convert blocks to nanoseconds (approximate)
-        
+
         let stakes_per_option = vec![NearToken::from_yoctonear(0); options.len()];
-        
+
         let bounty = Bounty {
             id: bounty_id,
             title,
@@ -545,12 +545,12 @@ impl BountyPredictionContract {
             is_closed: false,
             winning_option: None,
         };
-        
+
         self.bounties.insert(&bounty_id, &bounty);
         self.next_bounty_id += 1;
-        
+
         env::log_str(&format!("BOUNTY_CREATED: ID {} by {}", bounty_id, creator));
-        
+
         bounty_id
     }
 
@@ -561,7 +561,7 @@ impl BountyPredictionContract {
     pub fn get_active_bounties(&self) -> Vec<BountyView> {
         let mut active_bounties = Vec::new();
         let current_time = env::block_timestamp();
-        
+
         for i in 1..self.next_bounty_id {
             if let Some(bounty) = self.bounties.get(&i) {
                 if bounty.is_active && !bounty.is_closed && current_time < bounty.ends_at {
@@ -569,7 +569,7 @@ impl BountyPredictionContract {
                 }
             }
         }
-        
+
         active_bounties
     }
 
@@ -580,33 +580,33 @@ impl BountyPredictionContract {
         let staker = env::predecessor_account_id();
         let amount = env::attached_deposit();
         let current_time = env::block_timestamp();
-        
+
         // Get and validate bounty
         let mut bounty = self.bounties.get(&bounty_id).expect("Bounty not found");
         assert!(bounty.is_active, "Bounty is not active");
         assert!(!bounty.is_closed, "Bounty is already closed");
         assert!(current_time < bounty.ends_at, "Bounty has expired");
-        
+
         // Validate option index
         assert!((option_index as usize) < bounty.options.len(), "Invalid option index");
-        
+
         // Validate stake amount
         assert!(amount > NearToken::from_yoctonear(0), "Stake amount must be positive");
         assert!(amount <= bounty.max_stake_per_user, "Stake amount exceeds maximum allowed for this bounty");
-        
+
         let stake_key = (staker.clone(), bounty_id);
         let is_new_participant = !self.participant_stakes.contains_key(&stake_key);
-        
+
         // Handle existing stake
         if let Some(existing_stake) = self.participant_stakes.get(&stake_key) {
             // Remove previous stake from bounty totals
             bounty.total_staked = Self::safe_sub_tokens(bounty.total_staked, existing_stake.amount)
                 .expect("Total stake subtraction underflow");
-            bounty.stakes_per_option[existing_stake.option_index as usize] = 
+            bounty.stakes_per_option[existing_stake.option_index as usize] =
                 Self::safe_sub_tokens(bounty.stakes_per_option[existing_stake.option_index as usize], existing_stake.amount)
                     .expect("Option stake subtraction underflow");
         }
-        
+
         // Add participant to tracking list if they're new
         if is_new_participant {
             let bounty_participants = self.get_bounty_participants_mut();
@@ -616,14 +616,14 @@ impl BountyPredictionContract {
                 bounty_participants.insert(&bounty_id, &participants);
             }
         }
-        
+
         // Add new stake
         bounty.total_staked = Self::safe_add_tokens(bounty.total_staked, amount)
             .expect("Total stake addition overflow");
-        bounty.stakes_per_option[option_index as usize] = 
+        bounty.stakes_per_option[option_index as usize] =
             Self::safe_add_tokens(bounty.stakes_per_option[option_index as usize], amount)
                 .expect("Option stake addition overflow");
-        
+
         // Create or update participant stake
         let participant_stake = ParticipantStake {
             bounty_id,
@@ -631,11 +631,11 @@ impl BountyPredictionContract {
             amount,
             staked_at: current_time,
         };
-        
+
         self.participant_stakes.insert(&stake_key, &participant_stake);
         self.bounties.insert(&bounty_id, &bounty);
-        
-        env::log_str(&format!("BOUNTY_STAKE: Account {} staked {} NEAR on option {} for bounty {}", 
+
+        env::log_str(&format!("BOUNTY_STAKE: Account {} staked {} NEAR on option {} for bounty {}",
                              staker, amount, option_index, bounty_id));
     }
 
@@ -653,7 +653,7 @@ impl BountyPredictionContract {
 
     pub fn get_user_bounties(&self, account: AccountId) -> Vec<ParticipantStakeView> {
         let mut user_stakes = Vec::new();
-        
+
         // Iterate through all bounties to find user's participations
         for i in 1..self.next_bounty_id {
             let stake_key = (account.clone(), i);
@@ -661,7 +661,7 @@ impl BountyPredictionContract {
                 user_stakes.push(stake.into());
             }
         }
-        
+
         user_stakes
     }
 
@@ -717,13 +717,13 @@ impl BountyPredictionContract {
             .checked_mul(self.platform_fee_rate as u128)
             .and_then(|x| x.checked_div(10000)) // Convert basis points to percentage
             .unwrap_or(0);
-        
+
         NearToken::from_yoctonear(fee_amount)
     }
 
     fn calculate_user_reward(&self, bounty: &Bounty, user_stake: NearToken, winning_option: u64) -> NearToken {
         let total_winning_stakes = bounty.stakes_per_option[winning_option as usize];
-        
+
         if total_winning_stakes == NearToken::from_yoctonear(0) {
             return NearToken::from_yoctonear(0);
         }
@@ -760,20 +760,20 @@ impl BountyPredictionContract {
         self.assert_not_paused();
         let caller = env::predecessor_account_id();
         let current_time = env::block_timestamp();
-        
+
         let mut bounty = self.bounties.get(&bounty_id).expect("Bounty not found");
-        
+
         // Authorization check - only contract owner (deployer) can close bounties
         assert!(
             caller == self.owner,
             "Only contract owner can close bounty"
         );
-        
+
         // State validation
         assert!(bounty.is_active, "Bounty is not active");
         assert!(!bounty.is_closed, "Bounty is already closed");
         assert!(current_time >= bounty.ends_at, "Bounty has not expired yet");
-        
+
         // Handle different scenarios
         if bounty.total_staked == NearToken::from_yoctonear(0) {
             // No participants - just close the bounty
@@ -785,7 +785,7 @@ impl BountyPredictionContract {
         }
 
         let participant_count = self.count_bounty_participants(bounty_id);
-        
+
         if participant_count <= 1 {
             // Single participant - return full stake, no fees
             self.distribute_single_participant_rewards(&mut bounty);
@@ -793,11 +793,11 @@ impl BountyPredictionContract {
             // Multiple participants - normal reward distribution
             self.distribute_multi_participant_rewards(&mut bounty);
         }
-        
+
         bounty.is_closed = true;
         bounty.is_active = false;
         self.bounties.insert(&bounty_id, &bounty);
-        
+
         env::log_str(&format!("BOUNTY_CLOSED: Bounty {} closed and rewards distributed", bounty_id));
     }
 
@@ -810,7 +810,7 @@ impl BountyPredictionContract {
                     if let Some(stake) = self.participant_stakes.get(&stake_key) {
                         // Return full stake to participant
                         Promise::new(account.clone()).transfer(stake.amount);
-                        env::log_str(&format!("SINGLE_PARTICIPANT_REFUND: {} received {} NEAR", 
+                        env::log_str(&format!("SINGLE_PARTICIPANT_REFUND: {} received {} NEAR",
                                              account, stake.amount));
                         return;
                     }
@@ -829,16 +829,16 @@ impl BountyPredictionContract {
                 return;
             }
         };
-        
+
         bounty.winning_option = Some(winning_option);
-        
+
         // Calculate and transfer platform fee
         let platform_fee = self.calculate_platform_fee(bounty.total_staked);
         if platform_fee > NearToken::from_yoctonear(0) {
             Promise::new(self.owner.clone()).transfer(platform_fee);
             env::log_str(&format!("PLATFORM_FEE: {} NEAR transferred to owner", platform_fee));
         }
-        
+
         // Distribute rewards to winners
         self.distribute_winner_rewards(bounty, winning_option);
     }
@@ -855,7 +855,7 @@ impl BountyPredictionContract {
                             let reward = self.calculate_user_reward(bounty, stake.amount, winning_option);
                             if reward > NearToken::from_yoctonear(0) {
                                 Promise::new(account.clone()).transfer(reward);
-                                env::log_str(&format!("WINNER_REWARD: {} received {} NEAR for winning option {}", 
+                                env::log_str(&format!("WINNER_REWARD: {} received {} NEAR for winning option {}",
                                                      account, reward, winning_option));
                             }
                         }
@@ -885,29 +885,29 @@ impl BountyPredictionContract {
     pub fn claim_bounty_winnings(&mut self, bounty_id: u64) {
         self.assert_not_paused();
         let claimer = env::predecessor_account_id();
-        
+
         let bounty = self.bounties.get(&bounty_id).expect("Bounty not found");
         assert!(bounty.is_closed, "Bounty is not closed yet");
-        
+
         let stake_key = (claimer.clone(), bounty_id);
         let stake = self.participant_stakes.get(&stake_key).expect("No stake found for this bounty");
-        
+
         // Check if user won
         if let Some(winning_option) = bounty.winning_option {
             if stake.option_index == winning_option {
                 let reward = self.calculate_user_reward(&bounty, stake.amount, winning_option);
-                
+
                 if reward > NearToken::from_yoctonear(0) {
                     // Check if contract has sufficient balance
                     let contract_balance = env::account_balance();
                     let reserved_balance = NearToken::from_near(1); // Reserve for operations
-                    
+
                     if contract_balance > Self::safe_add_tokens(reward, reserved_balance).unwrap_or(contract_balance) {
                         Promise::new(claimer.clone()).transfer(reward);
-                        env::log_str(&format!("CLAIM_SUCCESS: {} claimed {} NEAR from bounty {}", 
+                        env::log_str(&format!("CLAIM_SUCCESS: {} claimed {} NEAR from bounty {}",
                                              claimer, reward, bounty_id));
                     } else {
-                        env::log_str(&format!("CLAIM_FAILED: Insufficient contract balance for {} from bounty {}", 
+                        env::log_str(&format!("CLAIM_FAILED: Insufficient contract balance for {} from bounty {}",
                                              claimer, bounty_id));
                         panic!(
                             "Insufficient contract balance for reward payment: contract balance = {} yoctoNEAR, required = {} yoctoNEAR",
@@ -926,7 +926,7 @@ impl BountyPredictionContract {
             let participant_count = self.count_bounty_participants(bounty_id);
             if participant_count <= 1 {
                 Promise::new(claimer.clone()).transfer(stake.amount);
-                env::log_str(&format!("SINGLE_PARTICIPANT_CLAIM: {} claimed {} NEAR from bounty {}", 
+                env::log_str(&format!("SINGLE_PARTICIPANT_CLAIM: {} claimed {} NEAR from bounty {}",
                              claimer, stake.amount, bounty_id));
             } else {
                 panic!("No winning option determined");
@@ -937,11 +937,11 @@ impl BountyPredictionContract {
     // Owner functions
     pub fn update_reward_rate(&mut self, new_rate: u128) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update reward rate");
-        
+
         // Define safe limits for reward rate updates
         const MAX_REWARD_RATE: u128 = 1_000_000_000; // 1 billion - high but safe
         const MIN_REWARD_RATE: u128 = 1; // Minimum 1 unit per second
-        
+
         // Clamp the reward rate to safe bounds
         let safe_rate = if new_rate == 0 {
             MIN_REWARD_RATE
@@ -950,21 +950,21 @@ impl BountyPredictionContract {
         } else {
             new_rate
         };
-        
+
         env::log_str(&format!(
-            "REWARD_RATE_UPDATE: new_rate={} (clamped from {})", 
+            "REWARD_RATE_UPDATE: new_rate={} (clamped from {})",
             safe_rate, new_rate
         ));
-        
+
         self.reward_rate = safe_rate;
     }
 
     pub fn update_max_stake_amount(&mut self, new_max_amount: NearToken) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update max stake amount");
-        
+
         // Define safe limits for stake amounts
         const MAX_STAKE_LIMIT_NEAR: u128 = 100_000; // 100,000 NEAR maximum
-        
+
         // Ensure new max is not less than current min
         let safe_max = if new_max_amount < self.min_stake_amount {
             self.min_stake_amount
@@ -973,34 +973,34 @@ impl BountyPredictionContract {
         } else {
             new_max_amount
         };
-        
+
         env::log_str(&format!(
-            "MAX_STAKE_UPDATE: new_max={} NEAR (clamped from {})", 
+            "MAX_STAKE_UPDATE: new_max={} NEAR (clamped from {})",
             safe_max.as_near(), new_max_amount.as_near()
         ));
-        
+
         self.max_stake_amount = safe_max;
     }
 
     pub fn update_platform_fee_rate(&mut self, new_rate: u128) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can update platform fee rate");
-        
+
         // Define safe limits for platform fee (in basis points)
         const MAX_PLATFORM_FEE_RATE: u128 = 1000; // 10% maximum
         const MIN_PLATFORM_FEE_RATE: u128 = 0; // 0% minimum (free)
-        
+
         // Clamp the fee rate to safe bounds
         let safe_rate = if new_rate > MAX_PLATFORM_FEE_RATE {
             MAX_PLATFORM_FEE_RATE
         } else {
             new_rate.max(MIN_PLATFORM_FEE_RATE)
         };
-        
+
         env::log_str(&format!(
-            "PLATFORM_FEE_UPDATE: new_rate={}bp ({}%) clamped from {}bp", 
+            "PLATFORM_FEE_UPDATE: new_rate={}bp ({}%) clamped from {}bp",
             safe_rate, safe_rate / 100, new_rate
         ));
-        
+
         self.platform_fee_rate = safe_rate;
     }
 
@@ -1018,17 +1018,17 @@ impl BountyPredictionContract {
 
     pub fn emergency_close_bounty(&mut self, bounty_id: u64) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can emergency close bounty");
-        
+
         let mut bounty = self.bounties.get(&bounty_id).expect("Bounty not found");
         assert!(!bounty.is_closed, "Bounty is already closed");
-        
+
         // Emergency close - refund all participants without fees
         self.emergency_refund_participants(&bounty);
-        
+
         bounty.is_closed = true;
         bounty.is_active = false;
         self.bounties.insert(&bounty_id, &bounty);
-        
+
         env::log_str(&format!("EMERGENCY_CLOSE: Bounty {} emergency closed and participants refunded", bounty_id));
     }
 
@@ -1053,14 +1053,14 @@ impl BountyPredictionContract {
 
     pub fn withdraw_platform_fees(&mut self) {
         assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can withdraw platform fees");
-        
+
         let contract_balance = env::account_balance();
         let reserved_balance = NearToken::from_near(2); // Reserve more for operations
-        
+
         if contract_balance > reserved_balance {
             let withdrawal_amount = Self::safe_sub_tokens(contract_balance, reserved_balance)
                 .expect("Balance calculation error");
-            
+
             if withdrawal_amount > NearToken::from_yoctonear(0) {
                 Promise::new(self.owner.clone()).transfer(withdrawal_amount);
                 env::log_str(&format!("PLATFORM_FEES_WITHDRAWN: {} NEAR withdrawn by owner", withdrawal_amount));
@@ -1366,7 +1366,7 @@ mod tests {
         // Get user bounties
         let user_bounties = contract.get_user_bounties(accounts(1));
         assert_eq!(user_bounties.len(), 2);
-        
+
         // Verify stakes
         let stake1 = user_bounties.iter().find(|s| s.bounty_id == bounty_id1).unwrap();
         assert_eq!(stake1.amount.0, NearToken::from_near(3).as_yoctonear());
@@ -1426,7 +1426,7 @@ mod tests {
         );
 
         let mut bounty = contract.bounties.get(&bounty_id).unwrap();
-        
+
         // Test with no stakes
         assert_eq!(contract.determine_winning_option(&bounty), None);
 
@@ -1455,14 +1455,14 @@ mod tests {
         let total_amount = NearToken::from_near(100);
         let fee = contract.calculate_platform_fee(total_amount);
         let expected_fee = NearToken::from_near(5); // 5% of 100 NEAR
-        
+
         assert_eq!(fee.as_yoctonear(), expected_fee.as_yoctonear());
 
         // Test with smaller amount
         let small_amount = NearToken::from_near(1);
         let small_fee = contract.calculate_platform_fee(small_amount);
         let expected_small_fee = NearToken::from_millinear(50); // 5% of 1 NEAR = 0.05 NEAR
-        
+
         assert_eq!(small_fee.as_yoctonear(), expected_small_fee.as_yoctonear());
     }
 
@@ -1492,9 +1492,9 @@ mod tests {
         // User staked 10 NEAR on winning option (option 1)
         let user_stake = NearToken::from_near(10);
         let winning_option = 1u64;
-        
+
         let reward = contract.calculate_user_reward(&bounty, user_stake, winning_option);
-        
+
         // Expected calculation:
         // Total pool: 100 NEAR
         // Platform fee (5%): 5 NEAR
@@ -1504,7 +1504,7 @@ mod tests {
             .checked_mul(NearToken::from_near(95).as_yoctonear())
             .and_then(|x| x.checked_div(NearToken::from_near(70).as_yoctonear()))
             .unwrap_or(0);
-        
+
         assert_eq!(reward.as_yoctonear(), expected_reward_yocto);
     }
 
@@ -2104,7 +2104,7 @@ mod tests {
 
         // Multiple participants stake
         let stake_amount = NearToken::from_near(5);
-        
+
         // Participant 1
         testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(stake_amount).build());
         contract.stake_on_option(bounty_id, 0);

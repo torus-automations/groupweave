@@ -62,7 +62,6 @@ The following features are currently being developed:
 
 *   Betting as a mechanism for content curation/moderation with reward and punishment.
 *   User-owned AI and personalization with confidential AI models and trusted execution environments.
-*   Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP).
 
 ## Connect with us
 [![Website](https://readmecodegen.vercel.app/api/social-icon?name=Link)](https://www.torus-automations.xyz/)

@@ -6,12 +6,12 @@ async fn test_complete_bounty_lifecycle() -> Result<(), Box<dyn std::error::Erro
     let contract_wasm = &near_workspaces::compile_project("./").await?;
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
-    
+
     // Initialize the contract
     let reward_rate = 100u128;
     let min_stake = NearToken::from_near(1);
     let max_stake = NearToken::from_near(10000);
-    
+
     let init_outcome = contract
         .call("new")
         .args_json(json!({
@@ -21,7 +21,7 @@ async fn test_complete_bounty_lifecycle() -> Result<(), Box<dyn std::error::Erro
         }))
         .transact()
         .await?;
-    
+
     assert!(init_outcome.is_success(), "Contract initialization failed");
 
     // Test complete bounty lifecycle
@@ -49,7 +49,7 @@ async fn test_bounty_creation_and_staking(
         }))
         .transact()
         .await?;
-    
+
     assert!(create_outcome.is_success(), "Bounty creation failed");
     let bounty_id: u64 = create_outcome.json()?;
     assert_eq!(bounty_id, 1);
@@ -146,7 +146,7 @@ async fn test_bounty_closure_and_rewards(
         }))
         .transact()
         .await?;
-    
+
     let bounty_id: u64 = create_outcome.json()?;
 
     // Add participants
@@ -179,7 +179,7 @@ async fn test_bounty_closure_and_rewards(
         .args_json(json!({"bounty_id": bounty_id}))
         .transact()
         .await?;
-    
+
     let is_success = close_outcome.is_success();
     if !is_success {
         println!("Bounty closure failed with logs: {:?}", close_outcome.logs());
@@ -187,7 +187,7 @@ async fn test_bounty_closure_and_rewards(
             println!("Failure details: {:?}", failure);
         }
     }
-    
+
     assert!(is_success, "Bounty closure failed");
 
     // Verify bounty results
@@ -221,7 +221,7 @@ async fn test_multi_participant_scenario(
         }))
         .transact()
         .await?;
-    
+
     let bounty_id: u64 = create_outcome.json()?;
 
     // Create multiple users
@@ -258,7 +258,7 @@ async fn test_multi_participant_scenario(
         .args_json(json!({"bounty_id": bounty_id}))
         .await?;
     let option_stakes: Vec<String> = stakes_outcome.json()?;
-    
+
     // Red: 8 + 7 = 15 NEAR
     assert_eq!(option_stakes[0], NearToken::from_near(15).as_yoctonear().to_string());
     // Blue: 12 + 18 = 30 NEAR (winning option)
@@ -361,7 +361,7 @@ async fn test_single_participant_bounty() -> Result<(), Box<dyn std::error::Erro
     let contract_wasm = &near_workspaces::compile_project("./").await?;
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
-    
+
     // Initialize contract
     let init_outcome = contract
         .call("new")
@@ -400,7 +400,7 @@ async fn test_single_participant_bounty() -> Result<(), Box<dyn std::error::Erro
 
     // Wait and close bounty
     tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
-    
+
     let close_outcome = contract
         .call("close_bounty")
         .args_json(json!({"bounty_id": bounty_id}))
@@ -433,7 +433,7 @@ async fn test_emergency_functions() -> Result<(), Box<dyn std::error::Error>> {
     let contract_wasm = &near_workspaces::compile_project("./").await?;
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
-    
+
     // Initialize contract
     let init_outcome = contract
         .call("new")
