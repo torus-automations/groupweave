@@ -293,12 +293,19 @@ impl BountyPredictionContract {
     }
 
     /// Regular migration function that can be called after deployment
+    /// Only callable by the contract owner for security
     pub fn migrate_state(&mut self) {
+        self.assert_owner();
+        
         // This function can be used to migrate state after deployment
         // Initialize bounty_participants if it doesn't exist
         if self.bounty_participants.is_none() {
             self.bounty_participants = Some(LookupMap::new(b"t"));
             env::log_str("CONTRACT_MIGRATION: Initialized bounty_participants field");
+            
+            // Log current contract state for verification
+            env::log_str(&format!("CONTRACT_MIGRATION: Current state - next_bounty_id: {}, paused: {}", 
+                                 self.next_bounty_id, self.is_paused));
         } else {
             env::log_str("CONTRACT_MIGRATION: bounty_participants field already exists");
         }
