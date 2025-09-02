@@ -295,7 +295,7 @@ impl BountyPredictionContract {
     /// Regular migration function that can be called after deployment
     /// Only callable by the contract owner for security
     pub fn migrate_state(&mut self) {
-        self.assert_owner();
+        assert_eq!(env::predecessor_account_id(), self.owner, "Only owner can migrate state");
 
         // This function can be used to migrate state after deployment
         // Initialize bounty_participants if it doesn't exist
