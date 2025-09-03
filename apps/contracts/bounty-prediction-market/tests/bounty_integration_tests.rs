@@ -1,5 +1,5 @@
-use serde_json::json;
 use near_sdk::NearToken;
+use serde_json::json;
 
 #[tokio::test]
 async fn test_complete_bounty_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
@@ -80,7 +80,10 @@ async fn test_bounty_creation_and_staking(
         .await?;
     let stake1_success = stake1_outcome.is_success();
     if !stake1_success {
-        println!("User 1 staking failed with logs: {:?}", stake1_outcome.logs());
+        println!(
+            "User 1 staking failed with logs: {:?}",
+            stake1_outcome.logs()
+        );
         if let Err(failure) = stake1_outcome.into_result() {
             println!("Failure details: {:?}", failure);
         }
@@ -111,8 +114,14 @@ async fn test_bounty_creation_and_staking(
         .args_json(json!({"bounty_id": bounty_id}))
         .await?;
     let stakes: Vec<String> = stakes_outcome.json()?;
-    assert_eq!(stakes[0], NearToken::from_near(25).as_yoctonear().to_string()); // 10 + 15 NEAR
-    assert_eq!(stakes[1], NearToken::from_near(20).as_yoctonear().to_string()); // 20 NEAR
+    assert_eq!(
+        stakes[0],
+        NearToken::from_near(25).as_yoctonear().to_string()
+    ); // 10 + 15 NEAR
+    assert_eq!(
+        stakes[1],
+        NearToken::from_near(20).as_yoctonear().to_string()
+    ); // 20 NEAR
     assert_eq!(stakes[2], "0"); // No stakes on option 2
 
     // Verify individual participant stakes
@@ -123,7 +132,10 @@ async fn test_bounty_creation_and_staking(
     let user1_stake: Option<serde_json::Value> = user1_stake_outcome.json()?;
     assert!(user1_stake.is_some());
     let user1_stake = user1_stake.unwrap();
-    assert_eq!(user1_stake["amount"], NearToken::from_near(10).as_yoctonear().to_string());
+    assert_eq!(
+        user1_stake["amount"],
+        NearToken::from_near(10).as_yoctonear().to_string()
+    );
     assert_eq!(user1_stake["option_index"], 0);
 
     println!("✅ Bounty creation and staking tests passed");
@@ -182,7 +194,10 @@ async fn test_bounty_closure_and_rewards(
 
     let is_success = close_outcome.is_success();
     if !is_success {
-        println!("Bounty closure failed with logs: {:?}", close_outcome.logs());
+        println!(
+            "Bounty closure failed with logs: {:?}",
+            close_outcome.logs()
+        );
         if let Err(failure) = close_outcome.into_result() {
             println!("Failure details: {:?}", failure);
         }
@@ -260,11 +275,20 @@ async fn test_multi_participant_scenario(
     let option_stakes: Vec<String> = stakes_outcome.json()?;
 
     // Red: 8 + 7 = 15 NEAR
-    assert_eq!(option_stakes[0], NearToken::from_near(15).as_yoctonear().to_string());
+    assert_eq!(
+        option_stakes[0],
+        NearToken::from_near(15).as_yoctonear().to_string()
+    );
     // Blue: 12 + 18 = 30 NEAR (winning option)
-    assert_eq!(option_stakes[1], NearToken::from_near(30).as_yoctonear().to_string());
+    assert_eq!(
+        option_stakes[1],
+        NearToken::from_near(30).as_yoctonear().to_string()
+    );
     // Green: 5 NEAR
-    assert_eq!(option_stakes[2], NearToken::from_near(5).as_yoctonear().to_string());
+    assert_eq!(
+        option_stakes[2],
+        NearToken::from_near(5).as_yoctonear().to_string()
+    );
     // Yellow: 0 NEAR
     assert_eq!(option_stakes[3], "0");
 
@@ -335,7 +359,10 @@ async fn test_platform_fee_collection(
         }))
         .transact()
         .await?;
-    assert!(!create_while_paused.is_success(), "Bounty creation should fail when paused");
+    assert!(
+        !create_while_paused.is_success(),
+        "Bounty creation should fail when paused"
+    );
 
     // Unpause contract
     let unpause_outcome = contract
@@ -408,7 +435,10 @@ async fn test_single_participant_bounty() -> Result<(), Box<dyn std::error::Erro
         .await?;
     let close_success = close_outcome.is_success();
     if !close_success {
-        println!("Single participant bounty closure failed with logs: {:?}", close_outcome.logs());
+        println!(
+            "Single participant bounty closure failed with logs: {:?}",
+            close_outcome.logs()
+        );
         if let Err(failure) = close_outcome.into_result() {
             println!("Failure details: {:?}", failure);
         }
