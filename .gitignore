@@ -65,3 +65,4 @@ next-env.d.ts
 .DS_Store
 .vercel
 contract/target
+jules-scratch/
