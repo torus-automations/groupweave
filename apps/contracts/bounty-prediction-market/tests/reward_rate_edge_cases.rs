@@ -1,5 +1,5 @@
-use serde_json::json;
 use near_sdk::NearToken;
+use serde_json::json;
 
 /// Test reward rate edge cases to ensure the system handles extreme values safely
 #[tokio::test]
@@ -25,13 +25,19 @@ async fn test_zero_reward_rate() -> Result<(), Box<dyn std::error::Error>> {
 
     let is_success = init_outcome.is_success();
     if !is_success {
-        println!("Contract initialization failed with logs: {:?}", init_outcome.logs());
+        println!(
+            "Contract initialization failed with logs: {:?}",
+            init_outcome.logs()
+        );
         if let Err(failure) = init_outcome.into_result() {
             println!("Failure details: {:?}", failure);
         }
     }
 
-    assert!(is_success, "Contract initialization with zero reward rate should succeed (clamped to 1)");
+    assert!(
+        is_success,
+        "Contract initialization with zero reward rate should succeed (clamped to 1)"
+    );
 
     // Verify the reward rate was clamped to 1
     let rate_outcome = contract
@@ -66,7 +72,10 @@ async fn test_very_high_reward_rate() -> Result<(), Box<dyn std::error::Error>> 
         .transact()
         .await?;
 
-    assert!(init_outcome.is_success(), "Contract initialization with high reward rate should succeed");
+    assert!(
+        init_outcome.is_success(),
+        "Contract initialization with high reward rate should succeed"
+    );
 
     // Verify the reward rate was clamped to maximum
     let rate_outcome = contract
@@ -74,7 +83,10 @@ async fn test_very_high_reward_rate() -> Result<(), Box<dyn std::error::Error>> 
         .args_json(json!({}))
         .await?;
     let current_rate: u128 = rate_outcome.json()?;
-    assert_eq!(current_rate, 1_000_000_000, "Very high reward rate should be clamped to 1 billion");
+    assert_eq!(
+        current_rate, 1_000_000_000,
+        "Very high reward rate should be clamped to 1 billion"
+    );
 
     // Test staking with high reward rate
     let user_account = sandbox.dev_create_account().await?;
@@ -85,7 +97,10 @@ async fn test_very_high_reward_rate() -> Result<(), Box<dyn std::error::Error>> 
         .deposit(stake_amount)
         .transact()
         .await?;
-    assert!(stake_outcome.is_success(), "Staking with high reward rate should succeed");
+    assert!(
+        stake_outcome.is_success(),
+        "Staking with high reward rate should succeed"
+    );
 
     // Test reward calculation (should handle overflow gracefully)
     let rewards_outcome = contract
@@ -93,14 +108,20 @@ async fn test_very_high_reward_rate() -> Result<(), Box<dyn std::error::Error>> 
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let rewards: String = rewards_outcome.json()?;
-    assert!(!rewards.is_empty(), "Reward calculation should return a value even with high reward rate");
+    assert!(
+        !rewards.is_empty(),
+        "Reward calculation should return a value even with high reward rate"
+    );
 
     // Test claiming rewards (should not panic)
     let claim_outcome = user_account
         .call(contract.id(), "claim_rewards")
         .transact()
         .await?;
-    assert!(claim_outcome.is_success(), "Claiming rewards should succeed even with high reward rate");
+    assert!(
+        claim_outcome.is_success(),
+        "Claiming rewards should succeed even with high reward rate"
+    );
 
     println!("✅ Very high reward rate test passed - system handled extreme values safely");
     Ok(())
@@ -127,7 +148,10 @@ async fn test_reward_rate_overflow_protection() -> Result<(), Box<dyn std::error
         .transact()
         .await?;
 
-    assert!(init_outcome.is_success(), "Contract initialization should succeed");
+    assert!(
+        init_outcome.is_success(),
+        "Contract initialization should succeed"
+    );
 
     let user_account = sandbox.dev_create_account().await?;
 
@@ -147,10 +171,15 @@ async fn test_reward_rate_overflow_protection() -> Result<(), Box<dyn std::error
             .args_json(json!({"account": user_account.id()}))
             .await?;
         let rewards: String = rewards_outcome.json()?;
-        assert!(!rewards.is_empty(), "Reward calculation {} should return a value", i);
+        assert!(
+            !rewards.is_empty(),
+            "Reward calculation {} should return a value",
+            i
+        );
 
         // Parse to ensure it's a valid number
-        let _reward_value: u128 = rewards.parse()
+        let _reward_value: u128 = rewards
+            .parse()
             .expect("Reward should be a valid u128 number");
     }
 
@@ -191,7 +220,10 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .transact()
         .await?;
 
-    assert!(init_outcome.is_success(), "Contract initialization should succeed");
+    assert!(
+        init_outcome.is_success(),
+        "Contract initialization should succeed"
+    );
 
     let user_account = sandbox.dev_create_account().await?;
 
@@ -212,7 +244,10 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .args_json(json!({"new_rate": very_high_rate}))
         .transact()
         .await?;
-    assert!(update_outcome.is_success(), "Updating to high reward rate should succeed");
+    assert!(
+        update_outcome.is_success(),
+        "Updating to high reward rate should succeed"
+    );
 
     // Verify the rate was clamped to maximum
     let rate_outcome = contract
@@ -220,7 +255,10 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .args_json(json!({}))
         .await?;
     let current_rate: u128 = rate_outcome.json()?;
-    assert_eq!(current_rate, 1_000_000_000, "Reward rate should be clamped to maximum");
+    assert_eq!(
+        current_rate, 1_000_000_000,
+        "Reward rate should be clamped to maximum"
+    );
 
     // Test reward calculation with new high rate
     let rewards_outcome = contract
@@ -228,7 +266,10 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let rewards: String = rewards_outcome.json()?;
-    assert!(!rewards.is_empty(), "Reward calculation should work with updated high rate");
+    assert!(
+        !rewards.is_empty(),
+        "Reward calculation should work with updated high rate"
+    );
 
     // Test updating back to low rate
     let low_rate = 1u128;
@@ -238,7 +279,10 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .args_json(json!({"new_rate": low_rate}))
         .transact()
         .await?;
-    assert!(update_low_outcome.is_success(), "Updating to low reward rate should succeed");
+    assert!(
+        update_low_outcome.is_success(),
+        "Updating to low reward rate should succeed"
+    );
 
     // Verify low rate update
     let final_rate_outcome = contract
@@ -246,7 +290,10 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .args_json(json!({}))
         .await?;
     let final_rate: u128 = final_rate_outcome.json()?;
-    assert_eq!(final_rate, low_rate, "Reward rate should be updated to low value");
+    assert_eq!(
+        final_rate, low_rate,
+        "Reward rate should be updated to low value"
+    );
 
     // Test that rewards still work with low rate
     let final_rewards_outcome = contract
@@ -254,14 +301,18 @@ async fn test_reward_rate_update_edge_cases() -> Result<(), Box<dyn std::error::
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let final_rewards: String = final_rewards_outcome.json()?;
-    assert!(!final_rewards.is_empty(), "Reward calculation should work with low rate");
+    assert!(
+        !final_rewards.is_empty(),
+        "Reward calculation should work with low rate"
+    );
 
     println!("✅ Reward rate update edge cases test passed");
     Ok(())
 }
 
 #[tokio::test]
-async fn test_extreme_staking_amounts_with_high_rewards() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_extreme_staking_amounts_with_high_rewards() -> Result<(), Box<dyn std::error::Error>>
+{
     let contract_wasm = &near_workspaces::compile_project("./").await?;
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
@@ -281,7 +332,10 @@ async fn test_extreme_staking_amounts_with_high_rewards() -> Result<(), Box<dyn 
         .transact()
         .await?;
 
-    assert!(init_outcome.is_success(), "Contract initialization should succeed");
+    assert!(
+        init_outcome.is_success(),
+        "Contract initialization should succeed"
+    );
 
     // Test with multiple users staking maximum amounts
     let mut users = Vec::new();
@@ -297,7 +351,11 @@ async fn test_extreme_staking_amounts_with_high_rewards() -> Result<(), Box<dyn 
             .deposit(stake_per_user)
             .transact()
             .await?;
-        assert!(stake_outcome.is_success(), "User {} staking should succeed", i);
+        assert!(
+            stake_outcome.is_success(),
+            "User {} staking should succeed",
+            i
+        );
     }
 
     // Verify total staked is correct
@@ -320,20 +378,26 @@ async fn test_extreme_staking_amounts_with_high_rewards() -> Result<(), Box<dyn 
             .args_json(json!({"account": user.id()}))
             .await?;
         let rewards: String = rewards_outcome.json()?;
-        assert!(!rewards.is_empty(), "User {} reward calculation should work", i);
+        assert!(
+            !rewards.is_empty(),
+            "User {} reward calculation should work",
+            i
+        );
 
         // Ensure reward is a valid number
-        let _reward_value: u128 = rewards.parse()
+        let _reward_value: u128 = rewards
+            .parse()
             .expect("Reward should be a valid u128 number");
     }
 
     // Test claiming rewards for all users
     for (i, user) in users.iter().enumerate() {
-        let claim_outcome = user
-            .call(contract.id(), "claim_rewards")
-            .transact()
-            .await?;
-        assert!(claim_outcome.is_success(), "User {} reward claiming should succeed", i);
+        let claim_outcome = user.call(contract.id(), "claim_rewards").transact().await?;
+        assert!(
+            claim_outcome.is_success(),
+            "User {} reward claiming should succeed",
+            i
+        );
     }
 
     // Test partial unstaking with high rewards
@@ -344,7 +408,11 @@ async fn test_extreme_staking_amounts_with_high_rewards() -> Result<(), Box<dyn 
             .args_json(json!({"amount": partial_unstake.as_yoctonear().to_string()}))
             .transact()
             .await?;
-        assert!(unstake_outcome.is_success(), "User {} partial unstaking should succeed", i);
+        assert!(
+            unstake_outcome.is_success(),
+            "User {} partial unstaking should succeed",
+            i
+        );
     }
 
     println!("✅ Extreme staking amounts with high rewards test passed");
@@ -358,11 +426,11 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
 
     // Test boundary values for reward rate
     let boundary_values = vec![
-        (0u128, 1u128),                                    // Zero should be clamped to 1
-        (1u128, 1u128),                                    // Minimum valid value
-        (1_000_000u128, 1_000_000u128),                   // 1 million - high but reasonable
-        (1_000_000_000u128, 1_000_000_000u128),           // 1 billion - at the limit
-        (1_000_000_000_000u128, 1_000_000_000u128),       // 1 trillion - should be clamped to 1 billion
+        (0u128, 1u128),                             // Zero should be clamped to 1
+        (1u128, 1u128),                             // Minimum valid value
+        (1_000_000u128, 1_000_000u128),             // 1 million - high but reasonable
+        (1_000_000_000u128, 1_000_000_000u128),     // 1 billion - at the limit
+        (1_000_000_000_000u128, 1_000_000_000u128), // 1 trillion - should be clamped to 1 billion
     ];
 
     for (idx, (input_rate, expected_rate)) in boundary_values.iter().enumerate() {
@@ -381,7 +449,11 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
             .transact()
             .await?;
 
-        assert!(init_outcome.is_success(), "Boundary value {} initialization should succeed", idx);
+        assert!(
+            init_outcome.is_success(),
+            "Boundary value {} initialization should succeed",
+            idx
+        );
 
         // Verify the reward rate was set/clamped correctly
         let rate_outcome = contract
@@ -389,7 +461,11 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
             .args_json(json!({}))
             .await?;
         let actual_rate: u128 = rate_outcome.json()?;
-        assert_eq!(actual_rate, *expected_rate, "Boundary value {} should be clamped correctly", idx);
+        assert_eq!(
+            actual_rate, *expected_rate,
+            "Boundary value {} should be clamped correctly",
+            idx
+        );
 
         let user_account = sandbox.dev_create_account().await?;
 
@@ -399,7 +475,11 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
             .deposit(NearToken::from_near(10))
             .transact()
             .await?;
-        assert!(stake_outcome.is_success(), "Boundary value {} staking should succeed", idx);
+        assert!(
+            stake_outcome.is_success(),
+            "Boundary value {} staking should succeed",
+            idx
+        );
 
         // Test reward calculation
         let rewards_outcome = contract
@@ -407,10 +487,15 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
             .args_json(json!({"account": user_account.id()}))
             .await?;
         let rewards: String = rewards_outcome.json()?;
-        assert!(!rewards.is_empty(), "Boundary value {} reward calculation should work", idx);
+        assert!(
+            !rewards.is_empty(),
+            "Boundary value {} reward calculation should work",
+            idx
+        );
 
         // Ensure reward is a valid number and doesn't overflow
-        let reward_value: u128 = rewards.parse()
+        let reward_value: u128 = rewards
+            .parse()
             .expect("Reward should be a valid u128 number");
         assert!(reward_value <= u128::MAX, "Reward should not overflow u128");
 
@@ -419,7 +504,11 @@ async fn test_reward_rate_boundary_values() -> Result<(), Box<dyn std::error::Er
             .call(contract.id(), "claim_rewards")
             .transact()
             .await?;
-        assert!(claim_outcome.is_success(), "Boundary value {} claim should succeed", idx);
+        assert!(
+            claim_outcome.is_success(),
+            "Boundary value {} claim should succeed",
+            idx
+        );
     }
 
     println!("✅ Reward rate boundary values test passed");
