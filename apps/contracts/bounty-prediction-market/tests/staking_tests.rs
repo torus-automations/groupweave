@@ -1,5 +1,5 @@
-use serde_json::json;
 use near_sdk::NearToken;
+use serde_json::json;
 
 #[tokio::test]
 async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +34,11 @@ async fn test_basics_on(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::
         .transact()
         .await?;
 
-    assert!(init_outcome.is_success(), "Contract initialization failed: {:#?}", init_outcome.into_result().unwrap_err());
+    assert!(
+        init_outcome.is_success(),
+        "Contract initialization failed: {:#?}",
+        init_outcome.into_result().unwrap_err()
+    );
 
     // Test contract initialization
     test_contract_initialization(&contract).await?;
@@ -60,7 +64,9 @@ async fn test_basics_on(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
-async fn test_contract_initialization(contract: &near_workspaces::Contract) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_contract_initialization(
+    contract: &near_workspaces::Contract,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Test getting initial reward rate
     let reward_rate_outcome = contract
         .view("get_reward_rate")
@@ -110,7 +116,11 @@ async fn test_staking_flow(
         .deposit(stake_amount)
         .transact()
         .await?;
-    assert!(outcome.is_success(), "Staking should succeed: {:#?}", outcome.into_result().unwrap_err());
+    assert!(
+        outcome.is_success(),
+        "Staking should succeed: {:#?}",
+        outcome.into_result().unwrap_err()
+    );
 
     // Verify stake info with exact amounts
     let stake_info_outcome = contract
@@ -118,7 +128,10 @@ async fn test_staking_flow(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let stake_info: Option<serde_json::Value> = stake_info_outcome.json()?;
-    assert!(stake_info.is_some(), "Stake info should exist after staking");
+    assert!(
+        stake_info.is_some(),
+        "Stake info should exist after staking"
+    );
     let stake_info = stake_info.unwrap();
     assert_eq!(
         stake_info["amount"].as_str().unwrap(),
@@ -145,7 +158,10 @@ async fn test_staking_flow(
         .deposit(additional_stake)
         .transact()
         .await?;
-    assert!(additional_outcome.is_success(), "Additional staking should succeed");
+    assert!(
+        additional_outcome.is_success(),
+        "Additional staking should succeed"
+    );
 
     // Verify combined stake amount
     let combined_expected = stake_amount.as_yoctonear() + additional_stake.as_yoctonear();
@@ -189,7 +205,10 @@ async fn test_reward_calculations(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let initial_rewards: String = initial_rewards_outcome.json()?;
-    assert_eq!(initial_rewards, "0", "Initial pending rewards should be 0 for non-staker");
+    assert_eq!(
+        initial_rewards, "0",
+        "Initial pending rewards should be 0 for non-staker"
+    );
 
     // Stake some tokens
     let stake_amount = NearToken::from_near(5);
@@ -206,7 +225,10 @@ async fn test_reward_calculations(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let immediate_rewards: String = immediate_rewards_outcome.json()?;
-    assert_eq!(immediate_rewards, "0", "Immediate pending rewards should be 0");
+    assert_eq!(
+        immediate_rewards, "0",
+        "Immediate pending rewards should be 0"
+    );
 
     // Wait a bit for rewards to accumulate (simulate time passage)
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
@@ -219,14 +241,20 @@ async fn test_reward_calculations(
     let pending_rewards: String = pending_rewards_outcome.json()?;
 
     // Rewards calculation should work (might be 0 due to test environment timing)
-    assert!(!pending_rewards.is_empty(), "Pending rewards calculation should return a value");
+    assert!(
+        !pending_rewards.is_empty(),
+        "Pending rewards calculation should return a value"
+    );
 
     // Test claiming rewards
     let claim_outcome = user_account
         .call(contract.id(), "claim_rewards")
         .transact()
         .await?;
-    assert!(claim_outcome.is_success(), "Claiming rewards should succeed");
+    assert!(
+        claim_outcome.is_success(),
+        "Claiming rewards should succeed"
+    );
 
     // After claiming, pending rewards should be reset
     let post_claim_rewards_outcome = contract
@@ -234,7 +262,10 @@ async fn test_reward_calculations(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let post_claim_rewards: String = post_claim_rewards_outcome.json()?;
-    assert_eq!(post_claim_rewards, "0", "Pending rewards should be 0 after claiming");
+    assert_eq!(
+        post_claim_rewards, "0",
+        "Pending rewards should be 0 after claiming"
+    );
 
     // Verify stake amount is unchanged after claiming rewards
     let stake_info_outcome = contract
@@ -277,9 +308,16 @@ async fn test_unstaking_flow(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let stake_info: Option<serde_json::Value> = stake_info_outcome.json()?;
-    assert!(stake_info.is_some(), "Stake info should exist after staking");
+    assert!(
+        stake_info.is_some(),
+        "Stake info should exist after staking"
+    );
     let stake_info = stake_info.unwrap();
-    assert_eq!(stake_info["amount"].as_str().unwrap(), stake_amount.as_yoctonear().to_string(), "Initial stake amount should match");
+    assert_eq!(
+        stake_info["amount"].as_str().unwrap(),
+        stake_amount.as_yoctonear().to_string(),
+        "Initial stake amount should match"
+    );
 
     // Get total staked before unstaking
     let total_staked_before_outcome = contract
@@ -295,7 +333,11 @@ async fn test_unstaking_flow(
         .args_json(json!({"amount": unstake_amount.as_yoctonear().to_string()}))
         .transact()
         .await?;
-    assert!(unstake_outcome.is_success(), "Unstaking should succeed: {:#?}", unstake_outcome.into_result().unwrap_err());
+    assert!(
+        unstake_outcome.is_success(),
+        "Unstaking should succeed: {:#?}",
+        unstake_outcome.into_result().unwrap_err()
+    );
 
     // Verify remaining stake amount is correct
     let remaining_expected = stake_amount.as_yoctonear() - unstake_amount.as_yoctonear();
@@ -304,7 +346,10 @@ async fn test_unstaking_flow(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let stake_info_after: Option<serde_json::Value> = stake_info_after_outcome.json()?;
-    assert!(stake_info_after.is_some(), "Stake info should still exist after partial unstaking");
+    assert!(
+        stake_info_after.is_some(),
+        "Stake info should still exist after partial unstaking"
+    );
     let stake_info_after = stake_info_after.unwrap();
     assert_eq!(
         stake_info_after["amount"].as_str().unwrap(),
@@ -318,7 +363,8 @@ async fn test_unstaking_flow(
         .args_json(json!({}))
         .await?;
     let total_staked_after: String = total_staked_after_outcome.json()?;
-    let expected_total_after = total_staked_before.parse::<u128>().unwrap() - unstake_amount.as_yoctonear();
+    let expected_total_after =
+        total_staked_before.parse::<u128>().unwrap() - unstake_amount.as_yoctonear();
     assert_eq!(
         total_staked_after.parse::<u128>().unwrap(),
         expected_total_after,
@@ -332,7 +378,10 @@ async fn test_unstaking_flow(
         .args_json(json!({"amount": remaining_amount.as_yoctonear().to_string()}))
         .transact()
         .await?;
-    assert!(complete_unstake_outcome.is_success(), "Complete unstaking should succeed");
+    assert!(
+        complete_unstake_outcome.is_success(),
+        "Complete unstaking should succeed"
+    );
 
     // Verify stake info is removed after complete unstaking
     let final_stake_info_outcome = contract
@@ -340,7 +389,10 @@ async fn test_unstaking_flow(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let final_stake_info: Option<serde_json::Value> = final_stake_info_outcome.json()?;
-    assert!(final_stake_info.is_none(), "Stake info should be removed after complete unstaking");
+    assert!(
+        final_stake_info.is_none(),
+        "Stake info should be removed after complete unstaking"
+    );
 
     println!("✅ Unstaking flow tests passed");
     Ok(())
@@ -368,7 +420,10 @@ async fn test_edge_cases(
         .args_json(json!({"account": non_existent_account}))
         .await?;
     let stake_info: Option<serde_json::Value> = stake_info_outcome.json()?;
-    assert!(stake_info.is_none(), "Stake info should be None for non-existent account");
+    assert!(
+        stake_info.is_none(),
+        "Stake info should be None for non-existent account"
+    );
 
     // Test claiming rewards (should work even if rewards are 0)
     let _claim_outcome = user_account
@@ -434,7 +489,10 @@ async fn test_multiple_users_staking(
         .await?
         .json::<Option<serde_json::Value>>()?
         .unwrap();
-    assert_eq!(stake_info1["amount"].as_str().unwrap(), stake1.as_yoctonear().to_string());
+    assert_eq!(
+        stake_info1["amount"].as_str().unwrap(),
+        stake1.as_yoctonear().to_string()
+    );
 
     let stake_info2 = contract
         .view("get_stake_info")
@@ -442,7 +500,10 @@ async fn test_multiple_users_staking(
         .await?
         .json::<Option<serde_json::Value>>()?
         .unwrap();
-    assert_eq!(stake_info2["amount"].as_str().unwrap(), stake2.as_yoctonear().to_string());
+    assert_eq!(
+        stake_info2["amount"].as_str().unwrap(),
+        stake2.as_yoctonear().to_string()
+    );
 
     let stake_info3 = contract
         .view("get_stake_info")
@@ -450,7 +511,10 @@ async fn test_multiple_users_staking(
         .await?
         .json::<Option<serde_json::Value>>()?
         .unwrap();
-    assert_eq!(stake_info3["amount"].as_str().unwrap(), stake3.as_yoctonear().to_string());
+    assert_eq!(
+        stake_info3["amount"].as_str().unwrap(),
+        stake3.as_yoctonear().to_string()
+    );
 
     // Verify total staked equals initial total plus sum of all new stakes
     let new_stakes_total = stake1.as_yoctonear() + stake2.as_yoctonear() + stake3.as_yoctonear();
@@ -473,7 +537,10 @@ async fn test_multiple_users_staking(
         .args_json(json!({"amount": unstake_amount.as_yoctonear().to_string()}))
         .transact()
         .await?;
-    assert!(unstake_outcome.is_success(), "User 2 partial unstaking should succeed");
+    assert!(
+        unstake_outcome.is_success(),
+        "User 2 partial unstaking should succeed"
+    );
 
     // Verify User 2's remaining stake
     let remaining_stake2 = stake2.as_yoctonear() - unstake_amount.as_yoctonear();
@@ -543,7 +610,10 @@ async fn test_error_conditions(
         .args_json(json!({"amount": NearToken::from_near(1).as_yoctonear().to_string()}))
         .transact()
         .await?;
-    assert!(!unstake_outcome.is_success(), "Unstaking without stake should fail");
+    assert!(
+        !unstake_outcome.is_success(),
+        "Unstaking without stake should fail"
+    );
 
     // Stake some amount first
     let stake_amount = NearToken::from_near(5);
@@ -560,7 +630,10 @@ async fn test_error_conditions(
         .args_json(json!({"amount": excessive_unstake.as_yoctonear().to_string()}))
         .transact()
         .await?;
-    assert!(!excessive_unstake_outcome.is_success(), "Unstaking more than staked should fail");
+    assert!(
+        !excessive_unstake_outcome.is_success(),
+        "Unstaking more than staked should fail"
+    );
 
     // Test unstaking zero amount
     let zero_unstake_outcome = user_account
@@ -568,7 +641,10 @@ async fn test_error_conditions(
         .args_json(json!({"amount": "0"}))
         .transact()
         .await?;
-    assert!(!zero_unstake_outcome.is_success(), "Unstaking zero amount should fail");
+    assert!(
+        !zero_unstake_outcome.is_success(),
+        "Unstaking zero amount should fail"
+    );
 
     // Test staking below minimum (if minimum is 1 NEAR)
     let below_min_outcome = user_account
@@ -576,7 +652,10 @@ async fn test_error_conditions(
         .deposit(NearToken::from_yoctonear(1)) // Much less than 1 NEAR
         .transact()
         .await?;
-    assert!(!below_min_outcome.is_success(), "Staking below minimum should fail");
+    assert!(
+        !below_min_outcome.is_success(),
+        "Staking below minimum should fail"
+    );
 
     // Verify original stake is still intact after failed operations
     let stake_info_outcome = contract
@@ -683,7 +762,9 @@ async fn test_max_stake_limits() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_legacy_staking_functionality(
+    contract_wasm: &[u8],
+) -> Result<(), Box<dyn std::error::Error>> {
     let sandbox = near_workspaces::sandbox().await?;
     let contract = sandbox.dev_deploy(contract_wasm).await?;
 
@@ -718,7 +799,10 @@ async fn test_legacy_staking_functionality(contract_wasm: &[u8]) -> Result<(), B
         }))
         .transact()
         .await?;
-    assert!(fresh_init_outcome.is_success(), "Fresh contract initialization failed");
+    assert!(
+        fresh_init_outcome.is_success(),
+        "Fresh contract initialization failed"
+    );
 
     test_bounty_and_staking_coexistence(&sandbox, &fresh_contract).await?;
 
@@ -747,7 +831,10 @@ async fn test_legacy_staking_operations(
         .args_json(json!({"account": user_account.id()}))
         .await?;
     let stake_info: Option<serde_json::Value> = stake_info_outcome.json()?;
-    assert!(stake_info.is_some(), "Legacy stake info should be retrievable");
+    assert!(
+        stake_info.is_some(),
+        "Legacy stake info should be retrievable"
+    );
     let stake_info = stake_info.unwrap();
     assert_eq!(
         stake_info["amount"].as_str().unwrap(),
@@ -777,7 +864,10 @@ async fn test_legacy_staking_operations(
         .call(contract.id(), "claim_rewards")
         .transact()
         .await?;
-    assert!(claim_outcome.is_success(), "Legacy reward claiming should work");
+    assert!(
+        claim_outcome.is_success(),
+        "Legacy reward claiming should work"
+    );
 
     println!("✅ Legacy staking operations test passed");
     Ok(())
@@ -798,7 +888,10 @@ async fn test_bounty_and_staking_coexistence(
         .deposit(legacy_stake)
         .transact()
         .await?;
-    assert!(legacy_outcome.is_success(), "Legacy staking should work alongside bounties");
+    assert!(
+        legacy_outcome.is_success(),
+        "Legacy staking should work alongside bounties"
+    );
 
     // 2. Create and participate in bounty
     let bounty_id: u64 = contract
@@ -821,7 +914,10 @@ async fn test_bounty_and_staking_coexistence(
         .deposit(bounty_stake)
         .transact()
         .await?;
-    assert!(bounty_outcome.is_success(), "Bounty staking should work alongside legacy staking");
+    assert!(
+        bounty_outcome.is_success(),
+        "Bounty staking should work alongside legacy staking"
+    );
 
     // 3. Verify both systems work independently
 
