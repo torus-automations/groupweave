@@ -138,8 +138,8 @@ cargo fmt
 pnpm --filter creation test
 pnpm --filter dashboard test
 
-# Run all frontend tests
-pnpm test
+# Run all frontend tests  
+# Note: Individual apps may have their own test scripts
 ```
 
 ### API Tests
@@ -157,8 +157,8 @@ cargo test
 ### Pre-commit Checklist
 - [ ] `pnpm lint` passes
 - [ ] `pnpm check-types` passes  
-- [ ] All tests pass
-- [ ] Code is formatted (`pnpm format`)
+- [ ] `pnpm format` passes
+- [ ] Individual app tests pass (if applicable)
 
 ---
 
