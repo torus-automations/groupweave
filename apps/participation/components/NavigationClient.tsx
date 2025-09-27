@@ -1,12 +1,8 @@
 'use client';
 
-import { Navigation, WalletProvider } from '@repo/ui';
+import { Navigation, WalletProvider, NavigationItem } from '@repo/ui';
+import { usePathname } from 'next/navigation';
 
-// Define NavigationItem type locally since it's not exported in the built package
-interface NavigationItem {
-  name: string;
-  href: string;
-}
 
 const walletConfig = {
   network: "testnet" as const,
@@ -21,6 +17,8 @@ const walletConfig = {
 };
 
 export default function NavigationClient() {
+  const activePath = usePathname();
+
   const participationNavItems: NavigationItem[] = [
     { name: "Co-Create", href: "/" },
     { name: "My Decisions", href: "/decisions" },
@@ -30,7 +28,7 @@ export default function NavigationClient() {
 
   return (
     <WalletProvider config={walletConfig}>
-      <Navigation navItems={participationNavItems as any} />
+      <Navigation navItems={participationNavItems} activePath={activePath} />
     </WalletProvider>
   );
 }

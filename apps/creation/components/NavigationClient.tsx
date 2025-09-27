@@ -1,13 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Navigation, WalletProvider } from '@repo/ui';
-
-// Define NavigationItem type locally since it's not exported in the built package
-interface NavigationItem {
-  name: string;
-  href: string;
-}
+import { Navigation, WalletProvider, NavigationItem } from '@repo/ui';
+import { usePathname } from 'next/navigation';
 
 const walletConfig = {
   network: "testnet" as const,
@@ -22,11 +16,7 @@ const walletConfig = {
 };
 
 export default function NavigationClient() {
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const activePath = usePathname();
 
   const creationNavItems: NavigationItem[] = [
     { name: "Create", href: "/" },
@@ -35,14 +25,9 @@ export default function NavigationClient() {
     { name: "Collaborate", href: "/collaborate" },
   ];
 
-  // Only render wallet provider on client side to avoid SSR issues
-  if (!isClient) {
-    return <Navigation navItems={creationNavItems as any} />;
-  }
-
   return (
     <WalletProvider config={walletConfig}>
-      <Navigation navItems={creationNavItems as any} />
+      <Navigation navItems={creationNavItems} activePath={activePath} />
     </WalletProvider>
   );
 }

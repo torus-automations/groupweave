@@ -10,3 +10,5 @@ export * from './ui/input.js';
 export * from './ui/label.js';
 export * from './hooks/use-toast.js';
 export * from './wallet/index.js';
+export * from './Footer.js';
+export * from './ui/expandable-button';

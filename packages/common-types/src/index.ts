@@ -83,25 +83,6 @@ export interface RewardDistribution {
   txHash: string;
 }
 
-// ZKP Types
-export interface ZKProof {
-  proofId: string;
-  proofData: string; // Base64 encoded
-  publicInputs: string[];
-  verificationKey: string;
-  submitter: string;
-  verified: boolean;
-  submittedAt: number;
-  verifiedAt?: number;
-}
-
-export interface VerificationResult {
-  proofId: string;
-  isValid: boolean;
-  verifiedAt: number;
-  verifier: string;
-}
-
 // AI and Analytics Types
 export interface VotingAnalysis {
   pollId: number;

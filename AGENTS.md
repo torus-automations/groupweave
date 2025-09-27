@@ -1,4 +1,4 @@
-# AGENTS.md
+# GroupWeave Monorepo - Agent & Developer Instructions
 
 This file provides comprehensive instructions for AI agents working on the GroupWeave monorepo.
 

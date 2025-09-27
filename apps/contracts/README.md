@@ -1,47 +1,27 @@
-# NEAR Smart Contracts
+# NEAR Smart Contract for Bounty Prediction Market
 
-This workspace contains the NEAR smart contracts for the GroupWeave platform.
+This workspace contains the NEAR smart contract for the GroupWeave platform's bounty prediction market.
 
 ## Structure
 
 ```
 contracts/
-├── Cargo.toml          # Workspace manifest
-├── voting/             # 🗳️ Voting Contract
-│   ├── src/lib.rs
-│   └── Cargo.toml
-├── staking/            # 💰 Staking Contract
-│   ├── src/lib.rs
-│   └── Cargo.toml
-└── zkp-verifier/       # 🔒 ZKP Verifier Contract
+├── Cargo.toml                      # Workspace manifest
+└── bounty-prediction-market/       # 💸 Bounty Prediction Market Contract
     ├── src/lib.rs
     └── Cargo.toml
 ```
 
-## Contracts
+## Bounty Prediction Market Contract
 
-### Voting Contract
-Handles decentralized voting and polling functionality:
-- Create polls with multiple options
-- Vote on active polls
-- Track voting results
-- Time-limited polls
-- Vote changing capability
+This contract manages bounties, staking on bounty options, and reward distribution. It combines the functionalities of staking and prediction markets into a single, efficient contract.
 
-### Staking Contract
-Manages token staking and rewards with flexible betting amounts:
-- Stake any amount of NEAR tokens within the contract's defined limits.
-- A minimum and maximum stake amount can be configured.
-- Earn rewards over time.
-- Unstake with reward claims.
-- Configurable reward rates and staking limits.
-
-### ZKP Verifier Contract
-Zero-knowledge proof verification:
-- Submit ZK proofs
-- Verify proofs with authorized verifiers
-- Store verification results
-- Simple hash-based proof verification
+### Key Features:
+- **Bounty Creation**: Users can create bounties with a title, description, multiple options, a maximum stake amount per user, and a duration.
+- **Staking on Options**: Users can stake NEAR tokens on the bounty option they predict will win.
+- **Reward Distribution**: When a bounty is closed, the contract determines the winning option based on the total stake for each option. The prize pool (total staked amount minus a platform fee) is distributed proportionally among the users who staked on the winning option.
+- **Owner Controls**: The contract owner can manage the platform fee rate, maximum stake amounts, and pause the contract in case of emergencies.
+- **Migration Support**: The contract includes a migration function to handle state transitions during upgrades.
 
 ## Development
 
@@ -52,68 +32,56 @@ Zero-knowledge proof verification:
 
 ### Building
 ```bash
-# Build all contracts
-cargo build --release
-
-# Build specific contract
-cargo build -p voting-contract --release
+# Build the contract
+cargo build -p bounty-prediction-market --release
 ```
 
 ### Testing
 ```bash
 # Run all tests
-cargo test
-
-# Test specific contract
-cargo test -p voting-contract
+cargo test -p bounty-prediction-market
 ```
 
 ### Deployment
 ```bash
-# Deploy voting contract
-near deploy --wasmFile target/wasm32-unknown-unknown/release/voting_contract.wasm --accountId your-contract.testnet
-
-# Deploy staking contract
-near deploy --wasmFile target/wasm32-unknown-unknown/release/staking_contract.wasm --accountId your-staking.testnet --initFunction new --initArgs '{"reward_rate": "10", "min_stake_amount": "1000000000000000000000000", "max_stake_amount": "100000000000000000000000000"}'
-
-# Deploy ZKP verifier contract
-near deploy --wasmFile target/wasm32-unknown-unknown/release/zkp_verifier_contract.wasm --accountId your-zkp.testnet
+# Deploy the contract
+near deploy --wasmFile target/wasm32-unknown-unknown/release/bounty_prediction_market.wasm --accountId your-contract.testnet --initFunction new --initArgs '{"reward_rate": "10", "min_stake_amount": "1000000000000000000000000", "max_stake_amount": "100000000000000000000000000"}'
 ```
 
 ## Usage Examples
 
-### Voting Contract
+### Create a Bounty
 ```bash
-# Create a poll
-near call your-contract.testnet create_poll '{"title": "Best Feature", "description": "Vote for the best feature", "options": ["Feature A", "Feature B", "Feature C"], "duration_minutes": 1440}' --accountId your-account.testnet
-
-# Vote on a poll
-near call your-contract.testnet vote '{"poll_id": 1, "option_index": 0}' --accountId your-account.testnet
-
-# Get poll results
-near view your-contract.testnet get_poll '{"poll_id": 1}'
+# Create a new bounty
+near call your-contract.testnet create_bounty '{"title": "Next Big Feature", "description": "What feature should we build next?", "options": ["Feature X", "Feature Y"], "max_stake_per_user": "10000000000000000000000000", "duration_blocks": 86400}' --accountId your-account.testnet
 ```
 
-### Staking Contract
+### Stake on a Bounty Option
 ```bash
-# Stake tokens (e.g., 10 NEAR)
-near call your-staking.testnet stake --deposit 10 --accountId your-account.testnet
-
-# Check stake info
-near view your-staking.testnet get_stake_info '{"account": "your-account.testnet"}'
-
-# Claim rewards
-near call your-staking.testnet claim_rewards --accountId your-account.testnet
-
-# Update max stake amount (owner only)
-near call your-staking.testnet update_max_stake_amount '{"new_max_amount": "200000000000000000000000000"}' --accountId your-staking.testnet
+# Stake 5 NEAR on the first option of bounty with ID 1
+near call your-contract.testnet stake_on_option '{"bounty_id": 1, "option_index": 0}' --accountId your-account.testnet --deposit 5
 ```
 
-### ZKP Verifier Contract
+### Get Bounty Information
 ```bash
-# Submit a proof
-near call your-zkp.testnet submit_proof '{"proof_id": "proof1", "proof_data": "base64_proof", "public_inputs": ["input1"], "verification_key": "vk_data"}' --accountId your-account.testnet
+# Get details for a specific bounty
+near view your-contract.testnet get_bounty '{"bounty_id": 1}'
+```
 
-# Verify a proof (authorized verifier only)
-near call your-zkp.testnet verify_proof '{"proof_id": "proof1", "is_valid": true}' --accountId verifier.testnet
+### Get User's Stake Information
+```bash
+# Get a user's stake information for a specific bounty
+near view your-contract.testnet get_participant_stake '{"account_id": "your-account.testnet", "bounty_id": 1}'
+```
+
+### Close a Bounty (Owner only)
+```bash
+# Close a bounty after it has expired
+near call your-contract.testnet close_bounty '{"bounty_id": 1}' --accountId your-contract.testnet
+```
+
+### Get Bounty Results
+```bash
+# Get the results of a closed bounty
+near view your-contract.testnet get_bounty_results '{"bounty_id": 1}'
 ```
