@@ -1,47 +1,268 @@
 # GroupWeave Monorepo - Agent & Developer Instructions
 
-This document provides comprehensive instructions for developers and AI agents working on this monorepo. It is the single source of truth for repository setup, development workflows, and coding standards. Please read it carefully before contributing.
+This file provides comprehensive instructions for AI agents working on the GroupWeave monorepo.
 
-## Overview
-GroupWeave is the open-source infrastructure for user-owned AI, designed to enable co-creation and co-immersion in generative AI content. Currently developing on NEAR, with plans to integrate Shade agents as customizable, semi-autonomous assistants for multimodal content understanding, moderation, and curation.
+## Project Overview
 
-## Monorepo Tooling
-### pnpm
-Used for high-performance package management. All npm/yarn commands should be replaced with pnpm.
+GroupWeave is an open-source infrastructure for user-owned AI, designed to enable co-creation and co-immersion in generative AI content. Currently developing on NEAR, with plans to integrate Shade agents as customizable, semi-autonomous assistants for multimodal content understanding, moderation, and curation.
 
-### Turborepo
-Used to manage tasks and build pipelines across the monorepo, enabling faster builds and development.
+## Repository Structure
 
-## Global Commands
-- `pnpm install`: Install all dependencies for all workspaces.
-- `pnpm build`: Builds all apps and packages.
-- `pnpm dev`: Runs all applications in development mode. Use with --filter to run a specific app.
-- `pnpm lint`: Lints all apps and packages.
-- `pnpm check-types`: Runs TypeScript type checking across all relevant packages.
+This is a monorepo managed with **Turborepo** and **pnpm workspaces**.
 
-## Workspace Details
-- **`apps/creation`**: A Next.js application for creating new GroupWeave content.
-- **`apps/dashboard`**: A Next.js application for users to view and manage their content and participation.
-- **`apps/docs`**: A Next.js application for viewing project documentation.
-- **`apps/participation`**: A Next.js application for participating in GroupWeave experiences and rounds.
-- **`apps/mobile`**: A React Native application for GroupWeave on mobile, built with Expo.
-- **`apps/api`**: A FastAPI backend providing the main API for GroupWeave services.
-- **`apps/agents`**: Contains multiple Rust-based AI agent binaries for various automated tasks.
-- **`apps/contracts`**: A workspace containing NEAR smart contracts for on-chain logic, including staking and voting.
-- **`packages/ui`**: A shared React component library used across the frontend applications.
-- **`packages/common-types`**: Shared TypeScript types and interfaces for consistency across the monorepo.
-- **`packages/near`**: Shared utilities and configuration for interacting with the NEAR blockchain.
-- **`packages/eslint-config`**: Shared ESLint configurations for maintaining code quality.
-- **`packages/tailwind-config`**: Shared Tailwind CSS configuration for consistent styling.
-- **`packages/typescript-config`**: Shared TypeScript configurations (tsconfig) for the monorepo.
+### Applications (`apps/`)
 
-## Coding Style & Linting
-### Javascript / Typescript
-- Formatted with Prettier, linted with ESLint. Follows a specific import order. See `packages/eslint-config`.
+-   **`apps/creation`**: Next.js app for creating new GroupWeave content
+-   **`apps/dashboard`**: Next.js app for users to view and manage content/participation  
+-   **`apps/docs`**: Next.js app for project documentation
+-   **`apps/participation`**: Next.js app for participating in GroupWeave experiences
+-   **`apps/mobile`**: React Native app built with Expo for mobile platforms
+-   **`apps/api`**: FastAPI backend providing main API services
+-   **`apps/agents`**: Rust-based AI agent binaries for automated tasks
+-   **`apps/contracts`**: NEAR smart contracts (staking, voting, zkp-verifier)
 
-### Python
-- Formatted with black and isort, linted with flake8 and mypy. Configuration is in the `apps/api` directory.
+### Shared Packages (`packages/`)
+
+-   **`packages/ui`**: Shared React component library (shadcn/ui-inspired)
+-   **`packages/common-types`**: TypeScript types and interfaces
+-   **`packages/near`**: NEAR blockchain utilities and configuration
+-   **`packages/eslint-config`**: Shared ESLint configurations
+-   **`packages/tailwind-config`**: Shared Tailwind CSS configuration  
+-   **`packages/typescript-config`**: Shared TypeScript configurations
+
+---
+
+## Quick Start
+
+### Prerequisites
+- Node.js >=18
+- pnpm 9.0.0+
+- Python 3.9+
+- Rust 1.70+
+
+### Essential Commands
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Build all packages and apps  
+pnpm build
+
+# Run development servers for all apps
+pnpm dev
+
+# Lint all code
+pnpm lint
+
+# Type check all TypeScript
+pnpm check-types
+
+# Format all code
+pnpm format
+```
+
+---
+
+## Development Workflows
+
+### Frontend Development
+
+Run a specific Next.js app:
+```bash
+# Development server
+pnpm --filter creation dev
+pnpm --filter dashboard dev  
+pnpm --filter docs dev
+pnpm --filter participation dev
+```
+
+### Mobile Development
+
+```bash
+cd apps/mobile
+
+# Start development server
+pnpm start
+
+# Run on specific platforms  
+pnpm ios
+pnpm android
+```
+
+### API Development
+
+```bash
+cd apps/api
+
+# Setup Python environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run development server
+uvicorn main:app --reload --port 8000
+```
+
+### Rust Development
+
+```bash
+cd apps/agents  # or apps/contracts
+
+# Check code without building
+cargo check
+
+# Build project
+cargo build
+
+# Run tests
+cargo test
+
+# Lint code
+cargo clippy
+
+# Format code  
+cargo fmt
+```
+
+---
+
+## Testing
+
+### Frontend Tests
+```bash
+# Run tests for specific app
+pnpm --filter creation test
+pnpm --filter dashboard test
+
+# Run all frontend tests  
+# Note: Individual apps may have their own test scripts
+```
+
+### API Tests
+```bash
+cd apps/api
+pytest
+```
+
+### Rust Tests
+```bash
+cd apps/agents  # or apps/contracts
+cargo test
+```
+
+### Pre-commit Checklist
+- [ ] `pnpm lint` passes
+- [ ] `pnpm check-types` passes  
+- [ ] `pnpm format` passes
+- [ ] Individual app tests pass (if applicable)
+
+---
+
+## Pull Request Guidelines
+
+### Title Format
+Use conventional commits: `type(scope): description`
+
+**Examples:**
+- `feat(creation): add image upload component`
+- `fix(api): resolve authentication bug`  
+- `docs(agents): update setup instructions`
+- `refactor(ui): improve button component API`
+
+### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding/updating tests
+- `chore`: Maintenance tasks
+
+### PR Checklist
+- [ ] Title follows conventional commit format
+- [ ] All tests pass locally
+- [ ] Code is linted and type-checked
+- [ ] Documentation updated if needed
+- [ ] Breaking changes are documented
+
+---
+
+## Code Style & Standards
+
+### TypeScript/JavaScript
+- **Formatter**: Prettier
+- **Linter**: ESLint with custom configs
+- **Import order**: Enforced via ESLint
+- **Components**: Follow React best practices
+
+### Python  
+- **Formatter**: `black`
+- **Import sorter**: `isort`
+- **Linter**: `flake8`
+- **Type checker**: `mypy`
 
 ### Rust
-- Formatted with rustfmt, linted with cargo clippy. Configuration is in the respective Cargo.toml files.
+- **Formatter**: `rustfmt`
+- **Linter**: `clippy`
+- **Testing**: Standard `cargo test`
 
+---
+
+## Architecture Guidelines
+
+### Shared UI Components
+- Use `packages/ui` for reusable components
+- Follow shadcn/ui patterns with Radix UI primitives
+- Tailwind CSS for styling
+- Components should be framework-agnostic where possible
+
+### Type Safety
+- Use `packages/common-types` for shared TypeScript interfaces
+- Maintain strict type checking across all projects
+- Document complex types with TSDoc comments
+
+### NEAR Integration  
+- Use `packages/near` for blockchain interactions
+- Follow NEAR development best practices
+- Smart contracts in `apps/contracts`
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Dependencies not resolving:**
+```bash
+pnpm install --frozen-lockfile=false
+```
+
+**Build failures:**
+```bash
+pnpm clean  # If available
+pnpm build --force
+```
+
+**Type errors after changes:**
+```bash
+pnpm check-types --force
+```
+
+### Getting Help
+- Check existing issues and documentation
+- Review similar implementations in the codebase
+- Ensure you're using the correct package manager (pnpm, not npm/yarn)
+
+---
+
+## Important Notes
+
+1. **Package Manager**: Always use `pnpm`, never `npm` or `yarn`
+2. **Node Version**: Ensure Node.js >=18 for compatibility  
+3. **Documentation**: This repository uses automated doc generation via `generate_docs.py`
+4. **Security**: Never commit secrets, API keys, or sensitive data
+5. **Mobile**: React Native components are separate from web UI components
