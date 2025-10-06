@@ -1,18 +1,31 @@
 # GroupWeave
 
-AI content generation is advancing at an incredible pace, leading to a significant shift in content creation and consumption.
+GroupWeave is the open infrastructure layer for user-owned AI experiences. The project empowers collaborative content creation and co-immersion across modalities, with NEAR as the first-chain deployment target and Shade agents extending into trusted execution environments.
 
-GroupWeave is the open-source infrastructure for user-owned AI, designed to enable co-creation and co-immersion in generative AI content. Currently developing on NEAR, with plans to integrate Shade agents as customizable, semi-autonomous assistants for multimodal content understanding, moderation, and curation.
+## Current Status (October 6, 2025)
 
-## Developer Contributions
+- Active app and smart contract development now resides in the private **DreamWeave** repository while we complete a comprehensive security audit.
+- The public `apps/*` workspaces remain as stubs; build, deploy, and contract commands are intentionally disabled until the audited code is re-open-sourced.
+- The `apps/creation`, `apps/dashboard`, and `apps/participation` Next.js projects have been merged into a single DreamWeave web experience. Updated sources will return to this repository after the audit deliverables are incorporated.
+- NEAR contracts previously tracked under `apps/contracts` were relocated for audit hardening. A sanitized reference implementation will be reintroduced here alongside audit notes.
+- Shared packages (`packages/ui`, `packages/common-types`, etc.) and infrastructure tooling continue to evolve in this monorepo, including documentation automation and agent-facing guidance.
 
-Please fork the repository, then create a branch and make the changes you wish to propose. Once the feature or fix is successfully implemented, resolve any conflicts with main locally. Finally, make a pull request and submit for review. Code contributions have to be approved by the maintainer(s), one at this time, and two when the project has grown. 
+## Working in This Repository
 
-## How to use
+While the application code is private, contributors can still collaborate on:
 
-Do not deploy any of the apps or smart contracts yet. The standards for merging will increase in a week. Please check back later in August.
+- Documentation updates (`docs.json`, `AGENTS.md`, `CLAUDE.md`) and developer onboarding flows.
+- Shared TypeScript packages and linting/formatting presets.
+- DevOps scaffolding (Turborepo tasks, pnpm scripts, Docker tooling) that does not expose private implementation details.
 
-This big project is developed as a monorepo with proper tooling, centralized documentation, and strict coding guidelines. Notes will be provided on conventions, AGENTS/CLAUDE.md, Docker, and Turborepo. AI agents should have a high efficacy with this setup.
+If you need to coordinate with the DreamWeave effort or request preview access during the audit window, please open an issue or reach out via the channels below.
+
+## Contribution Process
+
+1. Fork the repository and create a feature branch for documentation, tooling, or shared package improvements.
+2. Confirm that your changes do not rely on private DreamWeave assets.
+3. Ensure `pnpm lint`, `pnpm check-types`, and relevant tests pass for the packages you touched.
+4. Submit a pull request with conventional commit formatting. Maintainers will review for alignment with the audit timeline.
 
 ## Connect with us
 [![Website](https://readmecodegen.vercel.app/api/social-icon?name=Link)](https://www.torus-automations.xyz/)
@@ -34,8 +47,10 @@ When you make changes to the repository that require documentation updates (e.g.
 
 ## Roadmap
 
-The following features are currently being developed:
+The following priorities are in flight as part of the DreamWeave audit cycle:
 
-*   Betting as a mechanism for content curation/moderation with reward and punishment 
-*   User-owned AI and personalization with confidential AI models and trusted execution environments
-*   To be decided: Confidential voting/betting and tally counting with Zero Knowledge Proofs (ZKP)
+- Hardened launch of the merged DreamWeave web experience with modular content pipelines.
+- Security audit remediation for NEAR staking, voting, and ZKP verification contracts.
+- Expanded Shade agent integrations for confidential, user-owned inference paths.
+
+Once the audit closes, the corresponding applications and contracts will be re-synced here together with migration notes.
