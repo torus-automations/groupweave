@@ -4,14 +4,21 @@ import hashlib
 import logging
 import requests
 import uuid
+import json
+import re
+from contextlib import AsyncExitStack
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+
+# MCP Imports
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
 # Configuration
 PORT = int(os.getenv("PORT", 3000))
@@ -30,6 +37,8 @@ app = FastAPI()
 index = None
 docs: List[Dict] = []
 llm_pipeline = None
+mcp_session: Optional[ClientSession] = None
+mcp_exit_stack: Optional[AsyncExitStack] = None
 
 # Load Models
 logger.info("Loading Embedding Model (all-MiniLM-L6-v2)...")
@@ -57,7 +66,6 @@ try:
     logger.info("Models loaded successfully.")
 except Exception as e:
     logger.error(f"Failed to load LLM: {e}")
-    # Fallback or exit? For production, we exit.
     raise e
 
 # In-Memory RAG Indexing
@@ -92,6 +100,40 @@ def build_index():
     logger.info("Indexing complete.")
 
 build_index()
+
+# MCP Lifecycle
+@app.on_event("startup")
+async def startup_event():
+    global mcp_session, mcp_exit_stack
+    
+    # Start local search server
+    # Assuming src/search_server.py exists and python is available
+    server_script = os.path.join(os.path.dirname(__file__), "search_server.py")
+    
+    if not os.path.exists(server_script):
+        logger.warning(f"Search server script not found at {server_script}")
+        return
+
+    server_params = StdioServerParameters(
+        command="python", 
+        args=[server_script],
+        env=None
+    )
+    
+    mcp_exit_stack = AsyncExitStack()
+    
+    try:
+        read, write = await mcp_exit_stack.enter_async_context(stdio_client(server_params))
+        mcp_session = await mcp_exit_stack.enter_async_context(ClientSession(read, write))
+        await mcp_session.initialize()
+        logger.info("Connected to MCP Search Server")
+    except Exception as e:
+        logger.error(f"Failed to connect to MCP: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if mcp_exit_stack:
+        await mcp_exit_stack.aclose()
 
 class ChatMessage(BaseModel):
     role: str
@@ -129,7 +171,7 @@ def shade_log_interaction(session_id: str, query_hash: str, answer_hash: str):
             "session_id": session_id,
             "query_hash": query_hash,
             "answer_hash": answer_hash,
-            "cost_microusd": 0, # Local compute is "free" (sunk cost)
+            "cost_microusd": 0, # Local compute is "free"
             "community_id": COMMUNITY_ID
         },
         "gas": "100000000000000",
@@ -151,37 +193,65 @@ async def chat(req: ChatRequest):
     if not user_query:
         raise HTTPException(status_code=400, detail="No user message found")
 
-    # RAG Retrieval
-    context = retrieve(user_query)
+    # 1. Retrieve Local Context
+    rag_context = retrieve(user_query)
     
-    # Construct Prompt (Phi-3 Instruct format)
-    # <|user|>
-    # {prompt} <|end|>
-    # <|assistant|>
-    
+    # 2. Prepare Tools (MCP)
+    available_tools = []
+    if mcp_session:
+        try:
+            tools_result = await mcp_session.list_tools()
+            available_tools = tools_result.tools
+        except Exception as e:
+            logger.warning(f"MCP list_tools failed: {e}")
+
+    tool_descriptions = ""
+    if available_tools:
+        descriptions = [f"- {t.name}: {t.description}" for t in available_tools]
+        tool_descriptions = "Available Tools:\n" + "\n".join(descriptions) + "\n\nTo use a tool, reply STRICTLY in this format: [TOOL:<tool_name>|<args_json>]"
+
+    # 3. Construct System Prompt
     system_prompt = "You are a helpful curation assistant. Use the Context to answer."
-    full_prompt = f"<|system|>
-{system_prompt}
-Context:
-{context}<|end|>
-"
+    if tool_descriptions:
+        system_prompt += f"\n\n{tool_descriptions}\nIf you need external information, use the search tool."
+
+    full_prompt = f"<|system|>\n{system_prompt}\nContext:\n{rag_context}<|end|>\n"
     
     for m in req.messages:
-        full_prompt += f"<|{m.role}|>
-{m.content}<|end|>
-"
+        full_prompt += f"<|{m.role}|>\n{m.content}<|end|>\n"
     
-    full_prompt += "<|assistant|>
-"
+    full_prompt += "<|assistant|>\n"
 
-    # Generation
+    # 4. First Generation
     outputs = llm_pipeline(full_prompt)
-    answer = outputs[0]["generated_text"].split("<|assistant|>
-")[-1].strip()
+    answer = outputs[0]["generated_text"].split("<|assistant|>\n")[-1].strip()
 
-    # Logging
+    # 5. Handle Tool Use Loop (Single Step)
+    tool_match = re.search(r"\\[TOOL:(\w+)\|({.*?})\\]", answer)
+    if tool_match and mcp_session:
+        tool_name = tool_match.group(1)
+        tool_args_str = tool_match.group(2)
+        
+        logger.info(f"Tool execution requested: {tool_name} {tool_args_str}")
+        
+        tool_result = "Tool execution failed."
+        try:
+            tool_args = json.loads(tool_args_str)
+            result = await mcp_session.call_tool(tool_name, arguments=tool_args)
+            # Accessing result.content (list of TextContent or ImageContent)
+            tool_result = "\n".join([c.text for c in result.content if hasattr(c, "text")])
+        except Exception as e:
+            tool_result = f"Error: {str(e)}"
+            logger.error(tool_result)
+
+        # Feed back to LLM
+        follow_up_prompt = f"{full_prompt}{answer}\n<|tool|>\n{tool_result}<|end|>\n<|assistant|>\n"
+        
+        outputs_2 = llm_pipeline(follow_up_prompt)
+        answer = outputs_2[0]["generated_text"].split("<|tool|>\n")[-1].split("<|assistant|>\n")[-1].strip()
+
+    # 6. Logging
     session_id = str(uuid.uuid4())
-    
     shade_log_interaction(session_id, sha256_hex(user_query), sha256_hex(answer))
 
     return {
@@ -193,7 +263,7 @@ Context:
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "docs_indexed": len(docs)}
+    return {"status": "ok", "docs_indexed": len(docs), "mcp_connected": mcp_session is not None}
 
 if __name__ == "__main__":
     import uvicorn
