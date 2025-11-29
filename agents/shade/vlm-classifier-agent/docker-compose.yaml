@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  shade-agent-api:
+    image: ghcr.io/neardefi/shade-agent-api:latest
+    environment:
+      - NETWORK=testnet
+      - AGENT_ACCOUNT_ID=${AGENT_ACCOUNT_ID}
+      - AGENT_CONTRACT_ID=${AGENT_CONTRACT_ID}
+      - AGENT_CODEHASH=${AGENT_CODEHASH}
+    ports:
+      - "3140:3140"
+
+  app:
+    build: .
+    env_file:
+      - .env.development.local
+    environment:
+      - PORT=3001
+      - SHADE_AGENT_API_URL=http://shade-agent-api:3140/api/agent
+      - CLASSIFIER_CONTRACT_ID=${CLASSIFIER_CONTRACT_ID}
+      - USER_ID=${USER_ID}
+    depends_on:
+      - shade-agent-api
+    ports:
+      - "3001:3001"

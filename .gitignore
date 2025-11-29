@@ -1,66 +1,9 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-## Dependencies
-node_modules
-/.pnp
-.pnp.*
-
-
----
-
-## Build Outputs & Caches
-/build
-dist
-/.next/
-/out/
-.turbo
-.eslintcache
-.parcel-cache
-
----
-
-## Local Environment
+target/
+node_modules/
+dist/
 .env
-.env*.local
-*.pem
-
----
-
-## Logs & Debug
-logs
-*.log
-npm-debug.log*
-
-.pnpm-debug.log*
-
----
-
-## Testing
-/coverage
-
----
-
-## Typescript
-*.tsbuildinfo
-next-env.d.ts
-
----
-
-## IDEs & Editors
-.idea
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.sublime-workspace
-/.kiro/
-/.trae/
-/.claude/
-
----
-
-## Misc
 .DS_Store
-.vercel
-contract/target
+**/*.log
+__pycache__/
+CLAUDE.local.md
+.gemini.local

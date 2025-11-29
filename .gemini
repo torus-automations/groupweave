@@ -1,0 +1,40 @@
+# Groupweave Context for Gemini
+
+You are working on the **Groupweave** project, a decentralized content curation platform on NEAR Protocol powered by **Private Shade Agents**.
+
+## Project Structure
+- **Contracts (`/contracts`)**: Rust smart contracts for NEAR.
+  - `voting`: Polls and voting logic.
+  - `deposits`: Payment handling.
+  - `content-bounty-market`: Main logic for content bounties.
+- **Agents (`/agents`)**: **Python-based** autonomous agents running in TEEs.
+  - `curation-agent`: Private RAG agent (Phi-3 + Local Docs).
+  - `vlm-classifier-agent`: Private Vision agent (Qwen3-VL-2B).
+
+## Preferred Tools & Commands
+- **Contracts:** Rust (Cargo).
+- **Agents:** Python 3.10+ (Pip).
+
+## Common Tasks
+
+### Working with Agents (Python)
+Path: `agents/shade/<agent-name>/`
+```bash
+pip install -r requirements.txt
+python src/main.py   # Start agent
+./scripts/deploy.sh  # Build Docker image
+```
+
+### Working with Contracts (Rust)
+Path: `contracts/<contract-name>/`
+```bash
+cargo test
+cargo build --target wasm32-unknown-unknown --release
+```
+
+## Coding Style
+- **Python:** Strong typing (`typing`), Pydantic models, robust error handling (retries).
+- **Rust:** Security-first. Use `saturating_` arithmetic. Avoid `unwrap()` in production. Strictly follow Checks-Effects-Interactions pattern.
+
+## Architecture Note
+Agents are designed to be **private and self-contained**. They run local models (CPU-optimized) to avoid data leakage and minimize Phala Cloud costs.

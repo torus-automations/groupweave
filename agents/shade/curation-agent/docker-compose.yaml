@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  shade-agent-api:
+    image: ghcr.io/neardefi/shade-agent-api:latest
+    environment:
+      - NETWORK=testnet
+      # The CLI will set these during `shade agent up`
+      - AGENT_ACCOUNT_ID=${AGENT_ACCOUNT_ID}
+      - AGENT_CONTRACT_ID=${AGENT_CONTRACT_ID}
+      - AGENT_CODEHASH=${AGENT_CODEHASH}
+    ports:
+      - "3140:3140" # local only; Phala mounts internally
+
+  app:
+    build: .
+    env_file:
+      - .env.development.local
+    environment:
+      - PORT=3000
+      - SHADE_AGENT_API_URL=http://shade-agent-api:3140/api/agent
+      - CURATION_CONTRACT_ID=${CURATION_CONTRACT_ID}
+      - COMMUNITY_ID=${COMMUNITY_ID}
+    depends_on:
+      - shade-agent-api
+    ports:
+      - "3000:3000"

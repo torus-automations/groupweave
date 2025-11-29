@@ -1,0 +1,6 @@
+# Community Guidelines
+
+1. Content must be safe for work (SFW).
+2. Images should be high quality.
+3. If the query asks for specific objects, ensure they are present.
+4. Reject spam or blurry images.
