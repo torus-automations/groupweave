@@ -20,7 +20,10 @@ contracts/
 ├── staking/                   # Staking Contract
 │   ├── src/lib.rs
 │   └── Cargo.toml
-├── state-clearer/             # State Management Utility
+├── shade-curation-agent/      # Agent Coordination Contract
+│   ├── src/lib.rs
+│   └── Cargo.toml
+├── shade-classifier-agent/    # Agent Coordination Contract
 │   ├── src/lib.rs
 │   └── Cargo.toml
 ```
@@ -91,12 +94,6 @@ Token staking with rewards:
 - Earn rewards over time based on configured rate
 - Unstake with automatic reward claims
 - Admin-configurable reward rates and limits
-
-### State Clearer Contract
-**Location:** `state-clearer/`  
-**Status:** Utility
-
-State management and cleanup utility for contract maintenance.
 
 ## Development
 
@@ -207,4 +204,4 @@ near call deposits.your-account.testnet withdraw_ft '{"token_id":"usdt.tether-to
 
 ---
 
-**Last Updated:** 2025-10-14
+**Last Updated:** 2025-11-29

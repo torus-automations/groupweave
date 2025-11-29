@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download models for TEE isolation (Phi-3 + MiniLM)
 # This creates a large image but ensures no runtime internet dependency for models
+ENV HF_HOME=/app/models
 RUN python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; \
     from sentence_transformers import SentenceTransformer; \
     AutoModelForCausalLM.from_pretrained('microsoft/Phi-3-mini-4k-instruct', trust_remote_code=True); \

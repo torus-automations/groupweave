@@ -38,7 +38,7 @@ A production-grade **Private Retrieval Augmented Generation (RAG)** agent design
 |----------|-------------|----------|
 | `COMMUNITY_ID` | Identifier for the community (e.g., `dw`) | Yes |
 | `CURATION_CONTRACT_ID` | NEAR contract for logging | No (Optional) |
-| `SHADE_AGENT_API_URL` | Local Shade sidecar URL | No (Default: localhost:3140) |
+| `SHADE_AGENT_API_URL` | Local Shade sidecar URL (for local dev) | No (Default: http://localhost:3140/api/agent) |
 
 ## Development
 

@@ -40,7 +40,7 @@ A specialized **Private Visual Language Model (VLM)** agent designed for automat
 |----------|-------------|----------|
 | `USER_ID` | Authorized User ID (security binding) | Yes |
 | `CLASSIFIER_CONTRACT_ID` | NEAR contract for logging | No (Optional) |
-| `SHADE_AGENT_API_URL` | Local Shade sidecar URL | No (Default: localhost:3140) |
+| `SHADE_AGENT_API_URL` | Local Shade sidecar URL (for local dev) | No (Default: http://localhost:3140/api/agent) |
 | `DATA_DIR` | Path to community data | No (Default: data) |
 
 ## Development

@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download model weights (baking them into the image for TEE isolation)
 # This increases build time but ensures the agent is self-contained
+ENV HF_HOME=/app/models
 RUN python -c "from transformers import Qwen2VLForConditionalGeneration, AutoProcessor; \
     Qwen2VLForConditionalGeneration.from_pretrained('Qwen/Qwen3-VL-2B-Instruct'); \
     AutoProcessor.from_pretrained('Qwen/Qwen3-VL-2B-Instruct')"

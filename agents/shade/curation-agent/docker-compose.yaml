@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   shade-agent-api:
-    image: ghcr.io/neardefi/shade-agent-api:latest
+    image: ghcr.io/neardefi/shade-agent-api:1.0.4
     environment:
       - NETWORK=testnet
       # The CLI will set these during `shade agent up`
