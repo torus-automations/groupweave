@@ -99,7 +99,7 @@ impl VotingContract {
     }
 
     pub fn add_to_whitelist(&mut self, poll_id: u64, account: AccountId) {
-        let mut poll = self.polls.get(&poll_id).expect("Poll not found");
+        let poll = self.polls.get(&poll_id).expect("Poll not found");
         require!(env::predecessor_account_id() == poll.creator, "Only creator can whitelist");
         let initial = env::storage_usage();
         self.whitelist.insert(&(poll_id, account), &true);
@@ -302,7 +302,7 @@ impl VotingContract {
         self.user_votes.insert(&vote_key, &option_index);
         self.polls.insert(&poll_id, &poll);
 
-        let storage_used = env::storage_usage()
+        let storage_used = env::storage_usage() 
             .saturating_sub(initial_storage);
         let required_deposit_raw =
             u128::from(storage_used) * env::storage_byte_cost().as_yoctonear();
@@ -347,7 +347,7 @@ impl VotingContract {
 
             // Compute platform fee and per-winner payout
             let fee = (poll.reward_yocto as u128) * (self.platform_fee_bps as u128) / 10_000u128;
-            let mut net = poll.reward_yocto.saturating_sub(fee);
+            let net = poll.reward_yocto.saturating_sub(fee);
             if fee > 0 {
                 Promise::new(self.owner.clone()).transfer(NearToken::from_yoctonear(fee));
             }
@@ -423,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_create_poll_basic() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -438,6 +438,7 @@ mod tests {
             Some(60),
             true,
             Some(0),
+            None,
         );
 
         assert_eq!(poll_id, 1, "First poll should have ID 1");
@@ -453,7 +454,7 @@ mod tests {
 
     #[test]
     fn test_create_poll_with_multiple_options() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -473,6 +474,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -483,7 +485,7 @@ mod tests {
 
     #[test]
     fn test_create_poll_without_duration() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -498,6 +500,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -523,6 +526,7 @@ mod tests {
             Some(duration_minutes),
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -535,7 +539,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Poll must include at least two options")]
     fn test_create_poll_too_few_options() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -547,13 +551,14 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
     }
 
     #[test]
     #[should_panic(expected = "Option 0 cannot be empty")]
     fn test_create_poll_empty_option() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -568,13 +573,14 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
     }
 
     #[test]
     #[should_panic(expected = "Option 1 cannot be empty")]
     fn test_create_poll_whitespace_only_option() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -589,12 +595,13 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
     }
 
     #[test]
     fn test_create_multiple_polls_sequential() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -609,6 +616,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll_id2 = contract.create_poll(
@@ -622,6 +630,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll_id3 = contract.create_poll(
@@ -635,6 +644,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         assert_eq!(poll_id1, 1);
@@ -663,6 +673,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(NearToken::from_near(1)).build());
@@ -694,6 +705,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // User 1 votes for option 0
@@ -735,6 +747,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // Initial vote
@@ -774,6 +787,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(NearToken::from_near(1)).build());
@@ -790,7 +804,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Poll not found")]
     fn test_vote_nonexistent_poll() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -815,6 +829,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         testing_env!(context.predecessor_account_id(accounts(1)).attached_deposit(NearToken::from_near(1)).build());
@@ -839,6 +854,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // Close the poll
@@ -869,6 +885,7 @@ mod tests {
             Some(duration_minutes),
             true,
             Some(0),
+            None,
         );
 
         // Fast forward past expiration
@@ -896,6 +913,7 @@ mod tests {
             Some(duration_minutes),
             true,
             Some(0),
+            None,
         );
 
         // Vote just before expiration (1 nanosecond before)
@@ -928,6 +946,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         contract.close_poll(poll_id);
@@ -954,6 +973,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // Different user tries to close
@@ -988,6 +1008,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // Add some votes
@@ -1047,6 +1068,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let result = contract.get_user_vote(poll_id, accounts(5));
@@ -1059,7 +1081,7 @@ mod tests {
 
     #[test]
     fn test_poll_with_maximum_reasonable_options() {
-        let mut context = get_context(accounts(0), NearToken::from_near(10));
+        let context = get_context(accounts(0), NearToken::from_near(10));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1076,6 +1098,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -1102,6 +1125,7 @@ mod tests {
             Some(MAX_DURATION_MINUTES), // Exactly 1 year
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -1111,7 +1135,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Duration exceeds maximum (1 year)")]
     fn test_duration_exceeds_maximum() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1127,13 +1151,14 @@ mod tests {
             Some(MAX_DURATION_MINUTES + 1), // Over 1 year
             true,
             Some(0),
+            None,
         );
     }
 
     #[test]
     #[should_panic(expected = "Too many options (max 100)")]
     fn test_create_poll_too_many_options() {
-        let mut context = get_context(accounts(0), NearToken::from_near(10));
+        let context = get_context(accounts(0), NearToken::from_near(10));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1150,13 +1175,14 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
     }
 
     #[test]
     #[should_panic(expected = "Reward must be at least 0.1 NEAR")]
     fn test_create_poll_reward_too_small() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1171,6 +1197,7 @@ mod tests {
             None,
             true,
             Some(50_000_000_000_000_000_000_000), // 0.05 NEAR (below minimum)
+            None,
         );
     }
 
@@ -1180,7 +1207,7 @@ mod tests {
         let reward = 100_000_001u128 * 1_000_000_000_000_000_000_000_000u128; // 100M + 1 NEAR
         let deposit = NearToken::from_yoctonear(reward + 1_000_000_000_000_000_000_000_000); // reward + extra for storage
 
-        let mut context = get_context(accounts(0), deposit);
+        let context = get_context(accounts(0), deposit);
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1195,12 +1222,13 @@ mod tests {
             None,
             true,
             Some(reward),
+            None,
         );
     }
 
     #[test]
     fn test_unicode_in_options() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1216,6 +1244,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -1226,7 +1255,7 @@ mod tests {
 
     #[test]
     fn test_special_characters_in_text() {
-        let mut context = get_context(accounts(0), NearToken::from_near(1));
+        let context = get_context(accounts(0), NearToken::from_near(1));
         testing_env!(context.build());
         let mut contract = init_contract();
 
@@ -1241,6 +1270,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll = contract.get_poll(poll_id).unwrap();
@@ -1267,6 +1297,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         let poll_id2 = contract.create_poll(
@@ -1280,6 +1311,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // Same user votes on different polls
@@ -1320,6 +1352,7 @@ mod tests {
             None,
             true,
             Some(0),
+            None,
         );
 
         // Initial votes

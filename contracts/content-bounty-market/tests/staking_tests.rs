@@ -802,22 +802,37 @@ async fn test_bounty_and_staking_coexistence(
 
     // 2. Create and participate in bounty
     let bounty_id: u64 = contract
-        .call("create_bounty")
+        .call("create_content_bounty")
         .args_json(json!({
             "title": "Coexistence Test",
             "description": "Testing bounty and staking coexistence",
-            "options": ["Option A", "Option B"],
+            "requirements": "Reqs",
+            "base_prize": NearToken::from_near(1).as_yoctonear().to_string(),
             "max_stake_per_user": NearToken::from_near(20).as_yoctonear().to_string(),
-            "duration_blocks": 100
+            "duration_days": 10
         }))
+        .deposit(NearToken::from_near(2))
         .transact()
         .await?
         .json()?;
 
+    // Submit content
+    let submit_outcome = user_account
+        .call(contract.id(), "submit_content")
+        .args_json(json!({
+            "bounty_id": bounty_id,
+            "creation_id": "coexistence-creation",
+            "title": "My Submission",
+            "thumbnail_url": "http://thumb"
+        }))
+        .transact()
+        .await?;
+    assert!(submit_outcome.is_success(), "Submission should succeed");
+
     let bounty_stake = NearToken::from_near(8);
     let bounty_outcome = user_account
-        .call(contract.id(), "stake_on_option")
-        .args_json(json!({"bounty_id": bounty_id, "option_index": 0}))
+        .call(contract.id(), "stake_on_submission")
+        .args_json(json!({"bounty_id": bounty_id, "submission_index": 0}))
         .deposit(bounty_stake)
         .transact()
         .await?;

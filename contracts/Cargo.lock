@@ -630,29 +630,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deposits-minimal"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "near-sdk",
-]
-
-[[package]]
-name = "deposits-simple"
-version = "0.1.0"
-dependencies = [
- "near-sdk",
-]
-
-[[package]]
-name = "deposits-test"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "near-sdk",
-]
-
-[[package]]
 name = "deranged"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3276,14 +3253,6 @@ dependencies = [
  "near-sdk",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "state-clearer"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "near-sdk",
 ]
 
 [[package]]
