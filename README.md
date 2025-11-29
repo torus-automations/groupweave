@@ -7,7 +7,6 @@ Groupweave is a decentralized platform for **content creation and curation**, po
 - `contracts/`: NEAR smart contracts (Rust).
 - `agents/shade/`: **Python-based** Shade agent components (Curation & Classification).
     *   *Note:* These agents use local, private models (Qwen3-VL for VLM, Phi-3 for Curation) running on CPU TEEs. This ensures data privacy and cost-effectiveness by avoiding expensive, always-on large GPU instances.
-- `scripts/`: Utility scripts for deployment and management.
 
 ## Smart Contracts
 
