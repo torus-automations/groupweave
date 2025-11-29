@@ -10,6 +10,17 @@ A specialized **Private Visual Language Model (VLM)** agent designed for automat
 - **On-Chain Verification:** Logs classification results (hash + label) to the NEAR `shade-classifier-agent` contract.
 - **Self-Contained:** Model weights are baked into the Docker image for complete isolation.
 
+## Security & Encryption (Confidential Context)
+
+**Production Requirement:**
+For production deployments on Phala Cloud, **End-to-End Encryption (E2EE)** is mandatory for confidential context updates.
+- The calling application **must encrypt** the confidential context payload before sending it to the Shade Agent.
+- The Shade Agent (running in a TEE) receives the encrypted payload, decrypts it securely using the TEE's private key, and updates the local context index.
+- This ensures that sensitive community guidelines or private data are never exposed in transit or to the host infrastructure.
+
+**Development/Testing:**
+- For local development and testing environments, encryption can be disabled/bypassed. The agent will accept plain text context updates for ease of debugging.
+
 ## API Reference
 
 ### `POST /classify`

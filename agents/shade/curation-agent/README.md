@@ -8,6 +8,17 @@ A production-grade **Private Retrieval Augmented Generation (RAG)** agent design
 - **On-Chain Logging:** Logs interaction hashes to the NEAR `shade-curation-agent` contract for auditability.
 - **Community Isolation:** Enforces strict separation of data by `COMMUNITY_ID`.
 
+## Security & Encryption (Confidential Context)
+
+**Production Requirement:**
+For production deployments on Phala Cloud, **End-to-End Encryption (E2EE)** is mandatory for confidential context updates.
+- The calling application **must encrypt** the confidential context payload before sending it to the Shade Agent.
+- The Shade Agent (running in a TEE) receives the encrypted payload, decrypts it securely using the TEE's private key, and updates the local context index.
+- This ensures that sensitive community guidelines or private data are never exposed in transit or to the host infrastructure.
+
+**Development/Testing:**
+- For local development and testing environments, encryption can be disabled/bypassed. The agent will accept plain text context updates for ease of debugging.
+
 ## API Reference
 
 ### `POST /chat`
