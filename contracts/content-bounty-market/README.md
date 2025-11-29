@@ -14,22 +14,22 @@ This contract enables bounty-based content competitions:
 ## Key Features
 
 ### Content-Focused Design
-- ✅ Submissions track creator, creation ID, title, and thumbnail
-- ✅ Links to Dreamweave database for full content details
-- ✅ Prevents duplicate submissions per creator
-- ✅ Supports up to 100 submissions per bounty
+- Submissions track creator, creation ID, title, and thumbnail
+- Links to Dreamweave database for full content details
+- Prevents duplicate submissions per creator
+- Supports up to 100 submissions per bounty
 
 ### Creator/Backer Reward Splits
-- ✅ Configurable creator share (30-90%, default 90%)
-- ✅ Configurable backer share (10-70%, default 10%)
-- ✅ Platform fee: 5% of total prize
-- ✅ Backers split their pool proportionally to their stakes
+- Configurable creator share (30-90%, default 90%)
+- Configurable backer share (10-70%, default 10%)
+- Platform fee: 5% of total prize
+- Backers split their pool proportionally to their stakes
 
 ### Economic Model
-- ✅ Base prize from bounty creator (minimum 1 NEAR)
-- ✅ Community stakes add to total prize pool
-- ✅ Winner determined by submission with most stakes
-- ✅ Fair distribution: creator gets majority, backers share remainder
+- Base prize from bounty creator (minimum 1 NEAR)
+- Community stakes add to total prize pool
+- Winner determined by submission with most stakes
+- Fair distribution: creator gets majority, backers share remainder
 
 ## Contract Methods
 
@@ -311,25 +311,25 @@ NEAR_RPC_URL="https://test.rpc.fastnear.com"
 ## Safety Features
 
 ### Validations
-- ✅ Title length ≤ 200 chars
-- ✅ Description ≤ 1000 chars
-- ✅ Requirements ≤ 2000 chars
-- ✅ Base prize ≥ 1 NEAR
-- ✅ Max stake per user: 0.1 - 10,000 NEAR
-- ✅ Creator share: 30-90%
-- ✅ Creator + backer shares must equal 100%
-- ✅ Duration: 1-365 days
-- ✅ Max 100 submissions per bounty
-- ✅ Max 150 participants per bounty (prevents DoS)
+- Title length ≤ 200 chars
+- Description ≤ 1000 chars
+- Requirements ≤ 2000 chars
+- Base prize ≥ 1 NEAR
+- Max stake per user: 0.1 - 10,000 NEAR
+- Creator share: 30-90%
+- Creator + backer shares must equal 100%
+- Duration: 1-365 days
+- Max 100 submissions per bounty
+- Max 150 participants per bounty (prevents DoS)
 
 ### Security
-- ✅ All math uses checked operations (prevents overflow)
-- ✅ Reentrancy protection via state updates before transfers
-- ✅ Base prize locked in contract when bounty created
-- ✅ Only bounty creator or owner can close bounties
-- ✅ Only closed bounties pay rewards
-- ✅ Duplicate submission prevention
-- ✅ Storage cost validation
+- All math uses checked operations (prevents overflow)
+- Reentrancy protection via state updates before transfers
+- Base prize locked in contract when bounty created
+- Only bounty creator or owner can close bounties
+- Only closed bounties pay rewards
+- Duplicate submission prevention
+- Storage cost validation
 
 ### Error Handling
 - Insufficient deposit for base prize
@@ -415,5 +415,5 @@ Contributions welcome! Please:
 **Contract Name:** `content-bounty-market`  
 **Language:** Rust  
 **Framework:** NEAR SDK v5.17.2  
-**Status:** ✅ Ready for deployment  
-**Last Updated:** 2025-10-14
+**Status:** Active  
+**Last Updated:** 2025-11-29

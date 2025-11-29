@@ -7,32 +7,29 @@ This workspace contains the NEAR smart contracts for the Dreamweave platform.
 ```
 contracts/
 ├── Cargo.toml                 # Workspace manifest
-├── deposits/                  # 💎 Main Deposit Contract (Production)
+├── deposits/                  # Main Deposit Contract
 │   ├── src/lib.rs
 │   └── Cargo.toml
-├── content-bounty-market/     # 🎯 Content Bounty Prediction Market
+├── content-bounty-market/     # Content Bounty Prediction Market
 │   ├── src/lib.rs
 │   ├── Cargo.toml
 │   └── README.md             # Detailed documentation
-├── voting/                    # 🗳️ Curation Voting Contract
+├── voting/                    # Curation Voting Contract
 │   ├── src/lib.rs
 │   └── Cargo.toml
-├── staking/                   # 💰 Staking Contract
+├── staking/                   # Staking Contract
 │   ├── src/lib.rs
 │   └── Cargo.toml
-├── state-clearer/             # 🧽 State Management Utility
+├── state-clearer/             # State Management Utility
 │   ├── src/lib.rs
 │   └── Cargo.toml
-├── deposits-minimal/          # 🛠️ Minimal Test Version
-├── deposits-simple/           # 🛠️ Simple Test Version
-└── deposits-test/             # 🛠️ Testing Variant
 ```
 
 ## Contracts
 
-### Deposit Contract (Production)
+### Deposit Contract
 **Location:** `deposits/`  
-**Status:** ✅ Production-ready
+**Status:** Active
 
 Smart escrow for NEAR-native and fungible token deposits:
 - Accepts native NEAR via `deposit_native` with configurable minimums (default $5 USD equivalent)
@@ -53,7 +50,7 @@ Smart escrow for NEAR-native and fungible token deposits:
 
 ### Content Bounty Market Contract
 **Location:** `content-bounty-market/`  
-**Status:** ✅ Production-ready  
+**Status:** Active  
 **Docs:** See `content-bounty-market/README.md`
 
 Decentralized content creation competitions with community staking:
@@ -75,7 +72,7 @@ Decentralized content creation competitions with community staking:
 
 ### Voting Contract
 **Location:** `voting/`  
-**Status:** ✅ Production-ready
+**Status:** Active
 
 Curation voting for community content:
 - Create polls with multiple options
@@ -86,7 +83,7 @@ Curation voting for community content:
 
 ### Staking Contract
 **Location:** `staking/`  
-**Status:** ✅ Production-ready
+**Status:** Active
 
 Token staking with rewards:
 - Stake NEAR tokens within configurable limits
@@ -97,15 +94,9 @@ Token staking with rewards:
 
 ### State Clearer Contract
 **Location:** `state-clearer/`  
-**Status:** 🛠️ Utility
+**Status:** Utility
 
 State management and cleanup utility for contract maintenance.
-
-### Test Variants
-**Locations:** `deposits-minimal/`, `deposits-simple/`, `deposits-test/`  
-**Status:** 🛠️ Development/Testing
-
-Simplified versions of the deposit contract for testing and development.
 
 ## Development
 

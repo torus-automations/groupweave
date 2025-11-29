@@ -62,3 +62,7 @@ Run these within specific contract directories (e.g., `contracts/voting/`):
 - `NEAR_INTEGRATION_GUIDE.md`: Detailed guide on NEAR integration.
 - `agents/shade/curation-agent/src/server.ts`: Entry point for curation agent.
 - `contracts/voting/src/lib.rs`: Main voting contract logic.
+
+---
+
+**Last Updated:** 2025-11-29

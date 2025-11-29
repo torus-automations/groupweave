@@ -90,7 +90,9 @@ await vote(selector, contractId, { pollId: 1, optionIndex: 0 });
 import { verifyDepositTransaction } from '@/lib/near/deposit-calls'
 
 const result = await verifyDepositTransaction('testnet', txHash, accountId);
-if (result.verified) {
-  console.log(`Confirmed deposit of ${result.amount} yoctoNEAR`);
-}
+if (result.verified) { console.log(`Confirmed deposit of ${result.amount} yoctoNEAR`); }
+
+---
+
+**Last Updated:** 2025-11-29
 ```
