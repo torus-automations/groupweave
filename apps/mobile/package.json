@@ -36,7 +36,7 @@
     "react-native-safe-area-context": "4.8.2",
     "react-native-screens": "~3.29.0",
     "react-native-web": "~0.19.6",
-    "@groupweave/ui": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@groupweave/common-types": "workspace:*"
   },
   "devDependencies": {
@@ -44,8 +44,8 @@
     "@expo/webpack-config": "^19.0.0",
     "@types/react": "~18.2.45",
     "@types/react-native": "^0.73.0",
-    "@groupweave/eslint-config": "workspace:*",
-    "@groupweave/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "eslint": "^8.57.0",
     "typescript": "^5.1.3"
   },
