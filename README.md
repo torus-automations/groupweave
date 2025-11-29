@@ -26,9 +26,6 @@ Groupweave is a decentralized platform for **content creation and curation**, po
 
 ### Utility & Templates
 *   **`contracts/staking/`**: A generic time-based staking template. Allows users to stake NEAR to earn rewards over time. Currently serves as a foundation for future governance or "stake-to-access" features.
-*   **`contracts/state-clearer/`**: A critical dev-tool. It contains no state logic and provides a `clear_all_state` method.
-    *   **Usage:** Deploy this to an account to wipe its storage if a contract upgrade fails due to state corruption (serialization mismatches).
-*   **`contracts/deposits-minimal/` & `contracts/deposits-simple/`**: Simplified reference implementations of the deposits logic, primarily used for testing and distinct feature isolation.
 
 ## Oracle & Price Feeds
 

@@ -5,10 +5,6 @@ members = [
     "voting",
     "staking",
     "content-bounty-market",
-    "state-clearer",
-    "deposits-test",
-    "deposits-minimal",
-    "deposits-simple",
     "shade-curation-agent",
     "shade-classifier-agent"
 ]
