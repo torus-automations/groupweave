@@ -142,8 +142,6 @@ cargo near deploy deposits.testnet with-init-call new json-args '{"owner_id":"YO
   --initFunction new \
   --initArgs '{"owner_id":"your-account.testnet","treasury_account_id":"treasury.testnet"}'
 
-# Deploy ZKP verifier contract
-cargo near deploy your-zkp.testnet without-init-call network-config testnet sign-with-keychain send
 ```
 
 ## Usage Examples
@@ -175,14 +173,6 @@ near call your-staking.testnet claim_rewards --accountId your-account.testnet
 near call your-staking.testnet update_max_stake_amount '{"new_max_amount": "200000000000000000000000000"}' --accountId your-staking.testnet
 ```
 
-### ZKP Verifier Contract
-```bash
-# Submit a proof
-near call your-zkp.testnet submit_proof '{"proof_id": "proof1", "proof_data": "base64_proof", "public_inputs": ["input1"], "verification_key": "vk_data"}' --accountId your-account.testnet
-
-# Verify a proof (authorized verifier only)
-near call your-zkp.testnet verify_proof '{"proof_id": "proof1", "is_valid": true}' --accountId verifier.testnet
-```
 
 ### Deposit Contract
 ```bash
