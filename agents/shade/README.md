@@ -14,8 +14,8 @@ Each agent is a standalone containerized application.
 ### Development
 Navigate to an agent directory and run:
 ```bash
-bun install
-bun run dev
+pip install -r requirements.txt
+python src/main.py
 ```
 
 ### Local Simulation (Docker Compose)
@@ -33,6 +33,5 @@ Each agent includes a deployment script to build its Docker image:
 This will build the image `groupweave/<agent-name>:latest`. You can then push this image to your registry and register it with the Shade Protocol.
 
 ## Prerequisites
-- Node.js >= 20
-- Bun (recommended) or npm
+- Python 3.10
 - Docker (for deployment)
